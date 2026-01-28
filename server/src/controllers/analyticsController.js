@@ -1,4 +1,5 @@
 const Event = require('../models/Event');
+const mongoose = require('mongoose');
 
 exports.getDashboardStats = async (req, res) => {
   try {
@@ -7,7 +8,6 @@ exports.getDashboardStats = async (req, res) => {
     const pendingEvents = await Event.countDocuments({ status: 'pending' });
     const rejectedEvents = await Event.countDocuments({ status: 'rejected' });
 
-    // sum budget for approved events only
     const budgetStats = await Event.aggregate([
       { $match: { status: 'approved' } },
       { $group: { _id: null, totalBudget: { $sum: '$budget' } } }
@@ -35,6 +35,40 @@ exports.getDashboardStats = async (req, res) => {
           currency: 'INR'
         },
         recentActivity: recentEvents
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getClubStats = async (req, res) => {
+  try {
+    const { clubId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(clubId)) {
+      return res.status(400).json({ message: 'Invalid Club ID' });
+    }
+
+    const eventCount = await Event.countDocuments({
+      $or: [
+        { club: clubId },
+        { 'collaborators.club': clubId }
+      ]
+    });
+
+    // budget counted only when club is primary host
+    const budgetData = await Event.aggregate([
+      { $match: { club: new mongoose.Types.ObjectId(clubId) } },
+      { $group: { _id: null, totalBudget: { $sum: '$budget' } } }
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        clubId,
+        totalEvents: eventCount,
+        managedBudget: budgetData[0] ? budgetData[0].totalBudget : 0
       }
     });
   } catch (error) {

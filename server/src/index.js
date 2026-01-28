@@ -27,6 +27,10 @@ app.use('/api/events', require('./routes/eventRoutes'));
 app.use('/api/analytics', require('./routes/analyticsRoutes'));
 //for uploads
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+//club routes
+app.use('/api/clubs', require('./routes/clubRoutes'));
+//venue
+app.use('/api/venues', require('./routes/resourceRoutes'));
 
 
 app.get('/', (req, res) => {

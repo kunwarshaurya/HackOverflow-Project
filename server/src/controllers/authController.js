@@ -9,7 +9,7 @@ const generateToken = (id) => {
 
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, role, clubName } = req.body;
+    const { name, email, password, role, clubName, department, year } = req.body;
 
     const userExists = await User.findOne({ email });
     if (userExists) {
@@ -21,7 +21,9 @@ exports.register = async (req, res) => {
       email,
       password,
       role,
-      clubName
+      clubName,
+      department, 
+      year        
     });
 
     res.status(201).json({

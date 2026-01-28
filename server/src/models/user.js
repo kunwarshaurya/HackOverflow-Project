@@ -10,7 +10,19 @@ const UserSchema = new mongoose.Schema({
     enum: ['student', 'club_lead', 'admin'],
     default: 'student'
   },
-  clubName: { type: String },
+
+  department: { type: String }, 
+  year: { type: String },       
+  
+ 
+  joinedClubs: [{ 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Club' 
+  }],
+
+ 
+  managedClub: { type: String }, 
+
   createdAt: { type: Date, default: Date.now }
 });
 
