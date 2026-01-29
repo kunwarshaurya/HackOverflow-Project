@@ -31,6 +31,10 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/api/clubs', require('./routes/clubRoutes'));
 //venue
 app.use('/api/venues', require('./routes/resourceRoutes'));
+//notification
+app.use('/api/notifications', require('./routes/notificationRoutes'));
+//chat
+app.use('/api/chat', require('./routes/chatRoutes'));
 
 
 app.get('/', (req, res) => {

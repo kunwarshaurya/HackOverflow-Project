@@ -1,5 +1,6 @@
 const Event = require('../models/Event');
 const Venue = require('../models/Venue');
+const Notification = require('../models/Notification'); // <--- Add this
 const checkConflict = require('../utils/conflictChecker');
 
 exports.createEvent = async (req, res) => {
@@ -70,28 +71,35 @@ exports.getEvents = async (req, res) => {
   }
 };
 
+// @desc    Update event status (Admin Only)
 exports.updateEventStatus = async (req, res) => {
   try {
-    const { status, adminComments } = req.body;
-
+    const { status } = req.body;
     const event = await Event.findById(req.params.id);
+
     if (!event) {
       return res.status(404).json({ message: 'Event not found' });
     }
 
     event.status = status;
-    if (adminComments) {
-      event.adminComments = adminComments;
-    }
-
     await event.save();
 
-    res.json({ success: true, data: event });
+    // NOTIFICATION LOGIC 
+    const message = `Your event "${event.name}" has been ${status}.`;
+    
+    await Notification.create({
+      recipient: event.organizer, // Send to the Club Lead
+      message: message,
+      type: status === 'approved' ? 'success' : 'error', // Green for approved, Red for rejected
+      relatedEvent: event._id
+    });
+    // ------------------------------------
+
+    res.status(200).json({ success: true, data: event });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
-
 exports.settleEvent = async (req, res) => {
   try {
     if (!req.file) {
