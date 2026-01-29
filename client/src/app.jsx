@@ -1,24 +1,62 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-
-// Import ONLY the Landing Page
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import useAuth from './hooks/useAuth';
 import LandingPage from './pages/landing_pg';
+import Login from './pages/login';
+import Signup from './pages/signup';
+import Dashboard from './pages/dashboard';
+import Events from './pages/events';
 
-// We strip out everything else (AuthProvider, MainLayout, ProtectedRoutes)
-// to ensure the Landing Page renders without dependencies.
+// Protected Route Component
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500"></div>
+      </div>
+    );
+  }
+  
+  return isAuthenticated ? children : <Navigate to="/login" />;
+};
 
-const App = () => {
+// App Routes Component (needs to be inside AuthProvider)
+const AppRoutes = () => {
   return (
     <Router>
       <Routes>
-        {/* The Only Route that matters right now */}
         <Route path="/" element={<LandingPage />} />
-        
-        {/* Placeholders so the 'Link' buttons don't crash the app if clicked */}
-        <Route path="/login" element={<div className="p-10 text-xl">Login Page (Coming Soon)</div>} />
-        <Route path="/signup" element={<div className="p-10 text-xl">Signup Page (Coming Soon)</div>} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route 
+          path="/dashboard" 
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/events" 
+          element={
+            <ProtectedRoute>
+              <Events />
+            </ProtectedRoute>
+          } 
+        />
       </Routes>
     </Router>
+  );
+};
+
+const App = () => {
+  return (
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
   );
 };
 
