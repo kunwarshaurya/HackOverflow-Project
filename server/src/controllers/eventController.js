@@ -1,6 +1,6 @@
 const Event = require('../models/Event');
 const Venue = require('../models/Venue');
-const Notification = require('../models/Notification'); // <--- Add this
+const Notification = require('../models/Notification'); 
 const checkConflict = require('../utils/conflictChecker');
 
 exports.createEvent = async (req, res) => {
@@ -53,15 +53,36 @@ exports.createEvent = async (req, res) => {
   }
 };
 
+
 exports.getEvents = async (req, res) => {
   try {
-    const query =
-      req.user && req.user.role === 'admin' ? {} : { status: 'approved' };
+    let query = {};
+
+    // Role-based filtering
+
+    if (req.user.role === 'student') {
+      query.status = 'approved';
+    }
+
+    // If frontend sends ?history=true, show PAST events.
+    // Otherwise, show UPCOMING events.
+    const { history } = req.query;
+    const currentDate = new Date();
+
+    if (history === 'true') {
+  
+      query.date = { $lt: currentDate }; 
+    } else {
+
+      query.date = { $gte: currentDate }; 
+    }
 
     const events = await Event.find(query)
-      .populate('organizer', 'name email');
+      .populate('club', 'name')
+      .populate('venue', 'name')
+      .sort({ date: history === 'true' ? -1 : 1 });
 
-    res.json({
+    res.status(200).json({
       success: true,
       count: events.length,
       data: events
@@ -84,13 +105,13 @@ exports.updateEventStatus = async (req, res) => {
     event.status = status;
     await event.save();
 
-    // NOTIFICATION LOGIC 
+    //notification
     const message = `Your event "${event.name}" has been ${status}.`;
     
     await Notification.create({
-      recipient: event.organizer, // Send to the Club Lead
+      recipient: event.organizer, 
       message: message,
-      type: status === 'approved' ? 'success' : 'error', // Green for approved, Red for rejected
+      type: status === 'approved' ? 'success' : 'error', 
       relatedEvent: event._id
     });
     // ------------------------------------

@@ -36,4 +36,16 @@ const admin = (req, res, next) => {
   res.status(401).json({ message: 'Not authorized as an admin' });
 };
 
-module.exports = { protect, admin };
+//locking specific roles
+const authorize = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ 
+        message: `User role '${req.user.role}' is not authorized to access this route` 
+      });
+    }
+    next();
+  };
+};
+
+module.exports = { protect, admin, authorize };
