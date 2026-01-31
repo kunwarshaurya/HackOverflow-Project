@@ -68,3 +68,6 @@ This is the backend API for the HackOverflow 2026 project. It handles user authe
 1.  **Login** as a user to get the `token`.
 2.  Add the token to the **Authorization** tab (Select `Bearer Token`).
 3.  Hit the endpoints!
+
+
+## Features <a id='https://drive.google.com/drive/folders/1R0Yt0MG49FtQhT-BTkxgvHyMbOKacnnM'></a>
