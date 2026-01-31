@@ -42,7 +42,9 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       setLoading(true);
+      console.log('Attempting login with:', { email, password });
       const response = await api.post('/auth/login', { email, password });
+      console.log('Login response:', response.data);
       const { token: newToken, user: newUser } = response.data;
 
       setToken(newToken);
@@ -55,6 +57,7 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true };
     } catch (error) {
+      console.error('Login error:', error);
       return { 
         success: false, 
         message: error.response?.data?.message || 'Login failed' 
@@ -67,7 +70,9 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       setLoading(true);
+      console.log('Attempting register with:', userData);
       const response = await api.post('/auth/register', userData);
+      console.log('Register response:', response.data);
       const { token: newToken, user: newUser } = response.data;
       
       setToken(newToken);
@@ -80,6 +85,7 @@ export const AuthProvider = ({ children }) => {
       
       return { success: true };
     } catch (error) {
+      console.error('Register error:', error);
       return { 
         success: false, 
         message: error.response?.data?.message || 'Registration failed' 

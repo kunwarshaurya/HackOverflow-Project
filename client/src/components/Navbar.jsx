@@ -92,7 +92,7 @@ const Navbar = ({ role = 'student', onMenuToggle, onHomeClick, onLogout }) => {
   const getRoleDisplayName = (userRole) => {
     switch (userRole) {
       case 'student': return 'Student';
-      case 'club_leader': return 'Club Leader';
+      case 'club_lead': return 'Club Leader';
       case 'admin': return 'Admin';
       default: return 'User';
     }
