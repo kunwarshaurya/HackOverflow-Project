@@ -28,23 +28,302 @@ import {
   Layers
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import useAuth from '../../hooks/useAuth';
 
-// --- THEME CONSTANTS ---
-const COLORS = {
-  primary800: '#1E293B', 
-  primary600: '#475569', 
-  accent: '#F59E0B',     
-  cream: '#FDFCF7',      
+// Analytics Component
+const AnalyticsView = () => {
+  const analyticsData = {
+    totalEvents: 45,
+    totalUsers: 1247,
+    totalRevenue: 125000,
+    systemHealth: 99.2,
+    monthlyStats: [
+      { month: 'Jan', events: 32, users: 1180, revenue: 45000 },
+      { month: 'Feb', events: 38, users: 1205, revenue: 52000 },
+      { month: 'Mar', events: 41, users: 1230, revenue: 48000 },
+      { month: 'Apr', events: 45, users: 1247, revenue: 55000 },
+      { month: 'May', events: 48, users: 1265, revenue: 58000 },
+      { month: 'Jun', events: 52, users: 1280, revenue: 62000 }
+    ],
+    userGrowth: [
+      { month: 'Jan', students: 980, clubLeaders: 45, admins: 8 },
+      { month: 'Feb', students: 1005, clubLeaders: 48, admins: 8 },
+      { month: 'Mar', students: 1025, clubLeaders: 52, admins: 9 },
+      { month: 'Apr', students: 1040, clubLeaders: 55, admins: 9 },
+      { month: 'May', students: 1065, clubLeaders: 58, admins: 10 },
+      { month: 'Jun', students: 1085, clubLeaders: 62, admins: 10 }
+    ]
+  };
+
+  return (
+    <div className="space-y-8">
+      <h1 className="text-4xl font-black text-[#1E293B]">Analytics Dashboard</h1>
+      
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <BarChart3 className="text-blue-500" size={24} />
+            <span className="text-green-500 text-sm font-bold">+15%</span>
+          </div>
+          <h3 className="text-2xl font-black text-gray-800">{analyticsData.totalEvents}</h3>
+          <p className="text-gray-600 font-bold">Total Events</p>
+        </div>
+        
+        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <Users className="text-green-500" size={24} />
+            <span className="text-green-500 text-sm font-bold">+8%</span>
+          </div>
+          <h3 className="text-2xl font-black text-gray-800">{analyticsData.totalUsers}</h3>
+          <p className="text-gray-600 font-bold">Active Users</p>
+        </div>
+        
+        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <DollarSign className="text-yellow-500" size={24} />
+            <span className="text-green-500 text-sm font-bold">+12%</span>
+          </div>
+          <h3 className="text-2xl font-black text-gray-800">${analyticsData.totalRevenue.toLocaleString()}</h3>
+          <p className="text-gray-600 font-bold">Total Revenue</p>
+        </div>
+        
+        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <Activity className="text-purple-500" size={24} />
+            <span className="text-green-500 text-sm font-bold">+0.2%</span>
+          </div>
+          <h3 className="text-2xl font-black text-gray-800">{analyticsData.systemHealth}%</h3>
+          <p className="text-gray-600 font-bold">System Health</p>
+        </div>
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+          <h3 className="text-xl font-black text-gray-800 mb-4">Monthly Performance</h3>
+          <div className="h-64 flex items-end justify-between gap-2">
+            {analyticsData.monthlyStats.map((month, index) => (
+              <div key={index} className="flex-1 flex flex-col items-center gap-2">
+                <div className="w-full h-full relative flex items-end">
+                  <div 
+                    className="w-full bg-blue-500 rounded-t-lg transition-all duration-500"
+                    style={{ height: `${(month.events / 60) * 100}%` }}
+                    title={`${month.month}: ${month.events} events`}
+                  />
+                </div>
+                <span className="text-xs font-bold text-gray-600">{month.month}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+          <h3 className="text-xl font-black text-gray-800 mb-4">User Growth</h3>
+          <div className="h-64 flex items-end justify-between gap-2">
+            {analyticsData.userGrowth.map((month, index) => (
+              <div key={index} className="flex-1 flex flex-col items-center gap-2">
+                <div className="w-full h-full relative flex items-end">
+                  <div 
+                    className="w-full bg-green-500 rounded-t-lg transition-all duration-500"
+                    style={{ height: `${(month.students / 1200) * 100}%` }}
+                    title={`${month.month}: ${month.students} students`}
+                  />
+                </div>
+                <span className="text-xs font-bold text-gray-600">{month.month}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Broadcast Component
+const BroadcastView = () => {
+  const [message, setMessage] = useState('');
+  const [audience, setAudience] = useState('all');
+
+  const broadcasts = [
+    { id: 1, title: 'System Maintenance Notice', audience: 'All Users', date: '2024-01-30', status: 'sent' },
+    { id: 2, title: 'New Event Guidelines', audience: 'Club Leaders', date: '2024-01-29', status: 'draft' },
+    { id: 3, title: 'Registration Reminder', audience: 'Students', date: '2024-01-28', status: 'sent' }
+  ];
+
+  return (
+    <div className="space-y-8">
+      <h1 className="text-4xl font-black text-[#1E293B]">Broadcast Center</h1>
+      
+      {/* Send New Broadcast */}
+      <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+        <h3 className="text-xl font-black text-gray-800 mb-4">Send New Broadcast</h3>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Audience</label>
+            <select 
+              value={audience} 
+              onChange={(e) => setAudience(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg font-medium"
+            >
+              <option value="all">All Users</option>
+              <option value="students">Students Only</option>
+              <option value="club_leaders">Club Leaders Only</option>
+              <option value="admins">Admins Only</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Message</label>
+            <textarea 
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Enter your broadcast message..."
+              className="w-full p-3 border border-gray-300 rounded-lg font-medium h-32"
+            />
+          </div>
+          <button className="bg-[#F59E0B] text-white px-6 py-3 rounded-lg font-bold hover:bg-[#F59E0B]/80 transition-colors">
+            Send Broadcast
+          </button>
+        </div>
+      </div>
+
+      {/* Recent Broadcasts */}
+      <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+        <h3 className="text-xl font-black text-gray-800 mb-4">Recent Broadcasts</h3>
+        <div className="space-y-4">
+          {broadcasts.map((broadcast) => (
+            <div key={broadcast.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div>
+                <h4 className="font-bold text-gray-800">{broadcast.title}</h4>
+                <p className="text-sm text-gray-600">{broadcast.audience} • {broadcast.date}</p>
+              </div>
+              <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                broadcast.status === 'sent' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+              }`}>
+                {broadcast.status.toUpperCase()}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Requests Component
+const RequestsView = () => {
+  const requests = [
+    {
+      id: 1,
+      title: 'Tech Innovation Summit',
+      club: 'Tech Club',
+      status: 'pending',
+      date: '2024-02-15',
+      budget: 25000,
+      attendees: 300,
+      venue: 'Main Auditorium'
+    },
+    {
+      id: 2,
+      title: 'Cultural Night 2024',
+      club: 'Cultural Society',
+      status: 'approved',
+      date: '2024-02-20',
+      budget: 35000,
+      attendees: 500,
+      venue: 'Campus Ground'
+    },
+    {
+      id: 3,
+      title: 'Career Fair',
+      club: 'Career Development Club',
+      status: 'pending',
+      date: '2024-02-25',
+      budget: 45000,
+      attendees: 800,
+      venue: 'Exhibition Hall'
+    }
+  ];
+
+  return (
+    <div className="space-y-8">
+      <h1 className="text-4xl font-black text-[#1E293B]">Event Requests</h1>
+      
+      <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-black text-gray-800">Pending Approvals</h3>
+          <div className="flex gap-2">
+            <button className="bg-green-500 text-white px-4 py-2 rounded-lg font-bold text-sm">
+              Approve All
+            </button>
+            <button className="bg-red-500 text-white px-4 py-2 rounded-lg font-bold text-sm">
+              Reject All
+            </button>
+          </div>
+        </div>
+        
+        <div className="space-y-4">
+          {requests.map((request) => (
+            <div key={request.id} className="flex items-center justify-between p-6 bg-gray-50 rounded-lg">
+              <div className="flex-1">
+                <h4 className="font-bold text-gray-800 text-lg">{request.title}</h4>
+                <div className="flex items-center gap-4 text-sm text-gray-600 mt-2">
+                  <span className="flex items-center gap-1">
+                    <Users size={14} />
+                    {request.club}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Calendar size={14} />
+                    {request.date}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <DollarSign size={14} />
+                    ${request.budget.toLocaleString()}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <MapPin size={14} />
+                    {request.venue}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                  request.status === 'approved' ? 'bg-green-100 text-green-800' :
+                  request.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-red-100 text-red-800'
+                }`}>
+                  {request.status.toUpperCase()}
+                </span>
+                {request.status === 'pending' && (
+                  <div className="flex gap-2">
+                    <button className="bg-green-500 text-white px-3 py-1 rounded text-xs font-bold">
+                      Approve
+                    </button>
+                    <button className="bg-red-500 text-white px-3 py-1 rounded text-xs font-bold">
+                      Reject
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 const App = () => {
+  const { user } = useAuth();
   const [activeSection, setActiveSection] = useState('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Sidebar Menu Items mapped to your Server Architecture
   const menuItems = [
-    { id: 'dashboard', icon: LayoutDashboard, label: 'Pulse' },
+    { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { id: 'analytics', icon: BarChart3, label: 'Analytics' },
     { id: 'requests', icon: ClipboardList, label: 'Requests' },      
+    { id: 'broadcast', icon: Megaphone, label: 'Broadcast' },
     { id: 'queries', icon: Inbox, label: 'Query Box' },             
     { id: 'venues', icon: Building2, label: 'Resources' },          
     { id: 'clubs', icon: Users, label: 'Clubs' },                   
@@ -249,7 +528,7 @@ const App = () => {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#FDFCF7] text-[#1E293B] font-sans selection:bg-[#F59E0B] selection:text-[#1E293B]">
+    <div className="flex h-screen overflow-hidden bg-[#FDFCF7] text-[#1E293B] font-sans selection:bg-[#F59E0B] selection:text-[#1E293B] pt-16">
       
       {/* --- SIDEBAR --- */}
       <aside className="w-72 h-screen bg-[#1E293B] flex flex-col sticky top-0 z-20 shadow-2xl overflow-y-auto scrollbar-hide">
@@ -317,6 +596,12 @@ const App = () => {
             >
               {activeSection === 'dashboard' ? (
                 <DashboardHome />
+              ) : activeSection === 'analytics' ? (
+                <AnalyticsView />
+              ) : activeSection === 'broadcast' ? (
+                <BroadcastView />
+              ) : activeSection === 'requests' ? (
+                <RequestsView />
               ) : (
                 <div className="h-[70vh] flex flex-col items-center justify-center text-center space-y-8">
                   <motion.div 

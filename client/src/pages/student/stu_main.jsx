@@ -76,11 +76,25 @@ const DashboardView = ({ onNavigate, user }) => {
   useEffect(() => {
     const loadDashboardData = async () => {
       try {
-        const eventsData = await fetchWithAuth('/events');
-        const sorted = eventsData
-          .filter(e => new Date(e.date) > new Date())
-          .slice(0, 2);
-        setUpcomingEvents(sorted);
+        // Add fake data for demo
+        setUpcomingEvents([
+          { 
+            _id: 'fake1', 
+            title: 'Tech Innovation Summit 2026', 
+            date: new Date(Date.now() + 86400000 * 2).toISOString(), 
+            venue: { name: 'Main Auditorium' },
+            club: { name: 'Tech Club' },
+            description: 'Latest tech trends and innovations'
+          },
+          { 
+            _id: 'fake2', 
+            title: 'Cultural Night Celebration', 
+            date: new Date(Date.now() + 86400000 * 5).toISOString(), 
+            venue: { name: 'Campus Ground' },
+            club: { name: 'Cultural Society' },
+            description: 'Celebrate diversity and culture'
+          }
+        ]);
       } catch (err) {
         console.warn("Dashboard load error: Falling back to mock data", err.message);
         // Fallback mock data for visual consistency
@@ -531,7 +545,7 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#FDFCF7] text-[#1E293B] font-sans selection:bg-[#F59E0B] selection:text-[#1E293B]">
+    <div className="flex h-screen overflow-hidden bg-[#FDFCF7] text-[#1E293B] font-sans selection:bg-[#F59E0B] selection:text-[#1E293B] pt-16">
       
       {/* SIDEBAR NAVIGATION */}
       <div className="w-72 h-screen bg-[#1E293B] flex flex-col sticky top-0 z-20 shadow-2xl">

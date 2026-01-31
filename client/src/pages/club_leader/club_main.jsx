@@ -302,13 +302,47 @@ export default function App() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const statsRes = await fetch(`${API_BASE}/analytics/dashboard`);
-        const statsData = await statsRes.json();
-        if (statsData.success) setStats(statsData.data);
+        // Add fake data for club leader demo
+        setStats({
+          totalMembers: 156,
+          activeEvents: 8,
+          monthlyBudget: 15000,
+          engagementRate: 87,
+          pendingRequests: 3,
+          approvedEvents: 12,
+          totalRevenue: 45000,
+          clubRating: 4.8
+        });
 
-        const eventsRes = await fetch(`${API_BASE}/events`);
-        const eventsData = await eventsRes.json();
-        if (eventsData.success) setEvents(eventsData.data);
+        setEvents([
+          {
+            _id: 'club1',
+            title: 'Annual Tech Symposium',
+            status: 'pending',
+            date: new Date(Date.now() + 86400000 * 5).toISOString(),
+            budget: 25000,
+            attendees: 300,
+            venue: { name: 'Main Auditorium' }
+          },
+          {
+            _id: 'club2',
+            title: 'Workshop on AI Ethics',
+            status: 'approved',
+            date: new Date(Date.now() + 86400000 * 10).toISOString(),
+            budget: 8000,
+            attendees: 80,
+            venue: { name: 'Conference Room A' }
+          },
+          {
+            _id: 'club3',
+            title: 'Coding Bootcamp',
+            status: 'pending',
+            date: new Date(Date.now() + 86400000 * 15).toISOString(),
+            budget: 12000,
+            attendees: 150,
+            venue: { name: 'Computer Lab' }
+          }
+        ]);
       } catch (e) {
         console.warn("Backend not detected, running mock data.");
       }
@@ -351,7 +385,7 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen bg-[#FDFCF7] font-sans selection:bg-[#F59E0B] selection:text-[#1E293B] overflow-hidden">
+    <div className="flex h-screen bg-[#FDFCF7] font-sans selection:bg-[#F59E0B] selection:text-[#1E293B] overflow-hidden pt-16">
       {/* Sidebar - Locked Width */}
       <div className={`${isCollapsed ? 'w-20' : 'w-72 min-w-[288px]'} bg-[#1E293B] border-r border-[#475569]/30 flex flex-col transition-all duration-300 h-screen sticky top-0 shrink-0 z-50 shadow-2xl`}>
         <div className={`p-8 ${isCollapsed ? 'flex flex-col items-center' : ''}`}>

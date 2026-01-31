@@ -1,22 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 import Navbar from './Navbar';
 
-// Import Pages
+// Import the main dashboard files that have everything
 import StudentMain from '../pages/student/stu_main';
-import StudentEvents from '../pages/student/stu_event';
-import StudentGalleries from '../pages/student/stu_galaries';
-
 import ClubMain from '../pages/club_leader/club_main';
-import ClubProposal from '../pages/club_leader/club_proposal';
-import ClubRequest from '../pages/club_leader/club_req';
-import ClubChat from '../pages/club_leader/club_chat';
-import ClubReport from '../pages/club_leader/club_report';
-
 import AdminMain from '../pages/admin/ad_main';
-import AdminRequests from '../pages/admin/ad_requests';
-import AdminQueryBox from '../pages/admin/ad_querbybox';
 
 const MainLayout = () => {
   const { user, logout, loading } = useAuth();
@@ -48,8 +38,8 @@ const MainLayout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#ffeadb] overflow-x-hidden">
-      {/* Navbar */}
+    <div className="min-h-screen bg-[#ffeadb]">
+      {/* Navbar integrated for all roles */}
       <Navbar 
         role={user?.role || 'student'}
         onMenuToggle={handleMenuToggle}
@@ -57,42 +47,26 @@ const MainLayout = () => {
         onLogout={handleLogout}
       />
 
-      {/* Main Content */}
-      <div className="pt-20">
-        <Routes>
-          {/* Student Routes */}
-          {user?.role === 'student' && (
-            <>
-              <Route path="/dashboard" element={<StudentMain />} />
-              <Route path="/events" element={<StudentEvents />} />
-              <Route path="/galleries" element={<StudentGalleries />} />
-            </>
-          )}
+      {/* Main Content - Each main.jsx has its own sidebar and everything */}
+      <Routes>
+        {/* Student Routes - calls stu_main.jsx which has everything */}
+        {user?.role === 'student' && (
+          <Route path="*" element={<StudentMain />} />
+        )}
 
-          {/* Club Leader Routes */}
-          {user?.role === 'club_lead' && (
-            <>
-              <Route path="/dashboard" element={<ClubMain />} />
-              <Route path="/proposal" element={<ClubProposal />} />
-              <Route path="/request" element={<ClubRequest />} />
-              <Route path="/chat" element={<ClubChat />} />
-              <Route path="/report" element={<ClubReport />} />
-            </>
-          )}
+        {/* Club Leader Routes - calls club_main.jsx which has everything */}
+        {(user?.role === 'club_leader' || user?.role === 'club_lead') && (
+          <Route path="*" element={<ClubMain />} />
+        )}
 
-          {/* Admin Routes */}
-          {user?.role === 'admin' && (
-            <>
-              <Route path="/dashboard" element={<AdminMain />} />
-              <Route path="/requests" element={<AdminRequests />} />
-              <Route path="/query" element={<AdminQueryBox />} />
-            </>
-          )}
+        {/* Admin Routes - calls ad_main.jsx which has everything */}
+        {user?.role === 'admin' && (
+          <Route path="*" element={<AdminMain />} />
+        )}
 
-          {/* Default redirect */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </div>
+        {/* Default redirect */}
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
     </div>
   );
 };
