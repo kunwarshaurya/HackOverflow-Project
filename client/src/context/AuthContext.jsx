@@ -9,18 +9,39 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
+    const initializeAuth = async () => {
+      try {
+        const storedToken = localStorage.getItem('token');
+        const storedUser = localStorage.getItem('user');
 
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
+        if (storedToken && storedUser) {
+          // Verify token is still valid
+          try {
+            const parsedUser = JSON.parse(storedUser);
+            setToken(storedToken);
+            setUser(parsedUser);
+            
+            // Set the token in axios headers
+            api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+          } catch (error) {
+            // Invalid stored data, clear it
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+          }
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
   }, []);
 
   const login = async (email, password) => {
     try {
+      setLoading(true);
       const response = await api.post('/auth/login', { email, password });
       const { token: newToken, user: newUser } = response.data;
 
@@ -29,17 +50,23 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', newToken);
       localStorage.setItem('user', JSON.stringify(newUser));
 
+      // Set the token in axios headers
+      api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+
       return { success: true };
     } catch (error) {
       return { 
         success: false, 
         message: error.response?.data?.message || 'Login failed' 
       };
+    } finally {
+      setLoading(false);
     }
   };
 
   const register = async (userData) => {
     try {
+      setLoading(true);
       const response = await api.post('/auth/register', userData);
       const { token: newToken, user: newUser } = response.data;
       
@@ -48,12 +75,17 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', newToken);
       localStorage.setItem('user', JSON.stringify(newUser));
       
+      // Set the token in axios headers
+      api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+      
       return { success: true };
     } catch (error) {
       return { 
         success: false, 
         message: error.response?.data?.message || 'Registration failed' 
       };
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -62,6 +94,9 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    
+    // Remove token from axios headers
+    delete api.defaults.headers.common['Authorization'];
   };
 
   return (
@@ -76,7 +111,7 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated: !!token 
       }}
     >
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };

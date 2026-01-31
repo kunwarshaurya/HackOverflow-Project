@@ -1,625 +1,538 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom'; // <--- Added for Navigation
 import { 
   Users, Calendar, BarChart3, ShieldCheck, Zap, 
-  MessageSquare, Box, ArrowRight, MousePointer2, 
-  Activity, Clock, CheckCircle2, TrendingUp, Heart,
-  Lock, Search, Bell, Terminal, Scan, Fingerprint,
-  FileCheck, AlertCircle, Shield
+  MessageSquare, Box, ArrowRight, Activity, Clock, 
+  CheckCircle2, TrendingUp, Lock, FileCheck, AlertCircle, 
+  Shield, ChevronRight, Layout, Globe, Cpu, UserCircle, 
+  Settings, Layers, Bell, Search, Menu, X, Mail, Sparkles,
+  Trophy, Target, Rocket, Share2, Filter, PieChart, Database,
+  ArrowDown, MousePointer2, Scan, Fingerprint, Terminal,
+  ExternalLink, Workflow, ShieldAlert, HardDrive, Camera,
+  Image as ImageIcon, Eye, Smartphone, Instagram, Twitter, Linkedin,
+  TrendingUp as TrendingIcon, ShieldCheck as ShieldIcon, Clock as ClockIcon,
+  Search as SearchIcon, RefreshCw
 } from 'lucide-react';
 
-// --- UTILS & HOOKS ---
+import useAuth from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
-const useMousePosition = () => {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+const useScrollProgress = () => {
+  const [progress, setProgress] = useState(0);
   useEffect(() => {
-    const updateMousePosition = (e) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
+    const updateScroll = () => {
+      const currentScroll = window.scrollY;
+      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+      setProgress(currentScroll / scrollHeight);
     };
-    window.addEventListener('mousemove', updateMousePosition);
-    return () => window.removeEventListener('mousemove', updateMousePosition);
+    window.addEventListener("scroll", updateScroll);
+    return () => window.removeEventListener("scroll", updateScroll);
   }, []);
-  return mousePosition;
+  return progress;
 };
 
-const useInView = () => {
-  const [isInView, setIsInView] = useState(false);
-  const ref = useRef(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => setIsInView(entry.isIntersecting),
-      { threshold: 0.1 }
-    );
-    if (ref.current) observer.observe(ref.current);
-    return () => {
-      if (ref.current) observer.unobserve(ref.current);
-    };
-  }, []);
-
-  return [ref, isInView];
-};
-
-// --- COMPONENTS ---
-
-const FloatingBadge = ({ children, className, delay = 0 }) => (
+const Orb = ({ size, color, top, left, delay }) => (
   <div 
-    className={`absolute animate-float ${className}`} 
-    style={{ animationDelay: `${delay}s` }}
-  >
-    {children}
-  </div>
-);
-
-const Orb = ({ size, color, top, left, delay, speed = "animate-pulse-slow" }) => (
-  <div 
-    className={`absolute rounded-full mix-blend-multiply filter blur-3xl ${speed} opacity-60 pointer-events-none`}
-    style={{ 
-      width: size, 
-      height: size, 
-      backgroundColor: color, 
-      top: top, 
-      left: left,
-      animationDelay: `${delay}s`
-    }} 
+    className="absolute rounded-full mix-blend-multiply filter blur-3xl opacity-20 pointer-events-none animate-pulse-slow"
+    style={{ width: size, height: size, backgroundColor: color, top, left, animationDelay: `${delay}s` }} 
   />
 );
 
-const SectionTitle = ({ children, color = "text-orange-900" }) => (
-  <h2 className={`text-5xl md:text-8xl font-black tracking-tighter mb-12 uppercase transform -rotate-2 ${color} drop-shadow-sm`}>
-    {children}
-  </h2>
-);
+// --- AUTH GATEWAY (UPDATED LOGIC) ---
+const AuthGateway = () => {
+  const [isLogin, setIsLogin] = useState(true);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: 'student'
+  });
+  const [error, setError] = useState('');
+  const { login, register, loading } = useAuth();
+  const navigate = useNavigate();
 
-const FeatureCard = ({ title, desc, icon, rotation, color, delay }) => {
-  const [ref, inView] = useInView();
-  
-  return (
-    <div 
-      ref={ref}
-      className={`relative group bg-white border-4 border-black p-8 rounded-[3rem] shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] transition-all duration-700 transform ${rotation} ${inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'} hover:shadow-[16px_16px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-4 hover:scale-105 hover:z-20 overflow-hidden`}
-      style={{ transitionDelay: `${delay}ms` }}
-    >
-      <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-transparent to-black/5 rounded-bl-[100px] pointer-events-none`}></div>
-      <div className={`w-20 h-20 rounded-full flex items-center justify-center border-4 border-black mb-6 ${color} text-black group-hover:rotate-12 transition-transform duration-500`}>
-        {icon}
-      </div>
-      <h3 className="text-3xl font-black uppercase mb-4 leading-none tracking-tight">{title}</h3>
-      <p className="font-medium text-lg text-stone-600 leading-tight">{desc}</p>
-    </div>
-  );
-};
+  // Logic to clear data on tab switch
+  const handleTabSwitch = (loginState) => {
+    setIsLogin(loginState);
+    setFormData({
+      name: '',
+      email: '',
+      password: '',
+      role: 'student'
+    });
+    setError('');
+  };
 
-const StatCounter = ({ end, suffix, label, color }) => {
-  const [count, setCount] = useState(0);
-  const [ref, inView] = useInView();
+  const handleInputChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
 
-  useEffect(() => {
-    if (inView) {
-      let start = 0;
-      const duration = 2000;
-      const increment = end / (duration / 16);
-      
-      const timer = setInterval(() => {
-        start += increment;
-        if (start >= end) {
-          setCount(end);
-          clearInterval(timer);
-        } else {
-          setCount(Math.floor(start));
-        }
-      }, 16);
-      return () => clearInterval(timer);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (isLogin) {
+      const result = await login(formData.email, formData.password);
+      if (result.success) {
+        navigate('/dashboard');
+      } else {
+        setError(result.message);
+      }
+    } else {
+      const result = await register({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: 'student' // Registration defaults to student per logic
+      });
+      if (result.success) {
+        navigate('/dashboard');
+      } else {
+        setError(result.message);
+      }
     }
-  }, [inView, end]);
-
+  };
+  
   return (
-    <div ref={ref} className="text-center p-6 transform hover:scale-110 transition-transform cursor-crosshair">
-      <div className={`text-6xl md:text-8xl font-black mb-2 ${color} drop-shadow-sm`}>
-        {count}{suffix}
+    <div className="w-full max-w-lg bg-white border-[8px] border-[#493129] rounded-[3rem] shadow-[20px_20px_0px_0px_#493129] overflow-hidden relative z-20 transition-all duration-500 hover:shadow-[30px_30px_0px_0px_#8b597b]">
+      <div className="bg-[#493129] px-8 py-4 flex justify-between items-center">
+        <div className="flex gap-2">
+          <div className="w-3 h-3 rounded-full bg-[#efa3a0] animate-pulse"></div>
+          <div className="w-3 h-3 rounded-full bg-[#ffdec7]"></div>
+        </div>
+        <span className="text-white/40 font-mono text-xs uppercase tracking-widest font-black">auth_protocol_v5.4</span>
       </div>
-      <div className="font-mono font-bold uppercase tracking-widest text-stone-500">{label}</div>
+
+      <div className="flex bg-[#ffeadb] border-b-[8px] border-[#493129]">
+        <button onClick={() => handleTabSwitch(true)} className="flex-1 py-6 font-black uppercase tracking-widest text-sm transition-all relative">
+          {isLogin && <div className="absolute top-0 left-0 w-full h-1.5 bg-[#8b597b]"></div>}
+          Existing Node
+        </button>
+        <button onClick={() => handleTabSwitch(false)} className="flex-1 py-6 font-black uppercase tracking-widest text-sm transition-all relative">
+          {!isLogin && <div className="absolute top-0 left-0 w-full h-1.5 bg-[#efa3a0]"></div>}
+          New Identity
+        </button>
+      </div>
+
+      <div className="p-10 md:p-14 space-y-8">
+        <div className="space-y-1">
+            <h3 className="text-4xl font-black text-[#493129] uppercase tracking-tighter">{isLogin ? "Boot Portal." : "Create ID."}</h3>
+            <p className="text-sm font-bold text-[#8b597b] uppercase tracking-[0.4em]">{isLogin ? "Role-Specific Credentials Required" : "Initial Node Provisioning"}</p>
+        </div>
+
+        {/* ROLE PICKER: ONLY SHOW FOR EXISTING NODE (LOGIN) - REMOVED FOR SIMPLICITY */}
+
+        {error && (
+          <div className="bg-red-100 border-4 border-red-400 text-red-700 px-4 py-3 rounded-2xl">
+            <p className="font-bold text-sm">{error}</p>
+          </div>
+        )}
+
+        <form className="space-y-6" onSubmit={handleSubmit}>
+          {!isLogin && (
+            <input 
+              type="text" 
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              placeholder="FULL LEGAL NAME" 
+              className="w-full bg-[#ffeadb] border-4 border-[#493129] rounded-2xl p-5 font-bold placeholder:text-[#493129]/20 focus:outline-none focus:bg-white transition-all text-base" 
+              required
+            />
+          )}
+          <input 
+            type="email" 
+            name="email"
+            value={formData.email}
+            onChange={handleInputChange}
+            placeholder="INSTITUTIONAL EMAIL" 
+            className="w-full bg-[#ffeadb] border-4 border-[#493129] rounded-2xl p-5 font-bold placeholder:text-[#493129]/20 focus:outline-none focus:bg-white transition-all text-base" 
+            required
+          />
+          <input 
+            type="password" 
+            name="password"
+            value={formData.password}
+            onChange={handleInputChange}
+            placeholder="SECURE KEY" 
+            className="w-full bg-[#ffeadb] border-4 border-[#493129] rounded-2xl p-5 font-bold placeholder:text-[#493129]/20 focus:outline-none focus:bg-white transition-all text-base" 
+            required
+          />
+
+          <button 
+            type="submit"
+            disabled={loading}
+            className="w-full bg-[#493129] text-white py-6 rounded-[2rem] font-black uppercase tracking-[0.4em] text-lg shadow-[10px_10px_0px_0px_#efa3a0] hover:shadow-none hover:translate-x-1 hover:translate-y-1 active:scale-95 transition-all flex items-center justify-center gap-4 disabled:opacity-50"
+          >
+            {loading ? 'PROCESSING...' : (isLogin ? 'BOOT ACCESS' : 'SYNC ID')} 
+            {!loading && <ArrowRight size={24} />}
+          </button>
+        </form>
+      </div>
     </div>
   );
 };
 
-// --- NEW & IMPROVED COMPONENTS ---
-
-const ManifestoCard = ({ icon, title, desc, color, hoverColor }) => (
-  <div className={`relative p-8 border-4 border-black rounded-3xl overflow-hidden group hover:-translate-y-2 transition-transform duration-300 bg-white`}>
-     <div className={`absolute inset-0 ${hoverColor} translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out z-0`}></div>
-     
-     <div className="relative z-10">
-       <div className={`w-16 h-16 bg-black text-white rounded-2xl flex items-center justify-center mb-6 border-2 border-black group-hover:bg-white group-hover:text-black group-hover:rotate-12 transition-all duration-300 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]`}>
-         {icon}
-       </div>
-       <h4 className="font-black text-3xl mb-3 uppercase leading-none group-hover:text-white transition-colors">{title}</h4>
-       <p className="font-medium text-lg text-stone-600 group-hover:text-white/90 transition-colors leading-tight">{desc}</p>
-       
-       <div className="mt-6 flex items-center gap-2 font-bold uppercase text-sm tracking-widest opacity-0 group-hover:opacity-100 transition-opacity text-white translate-x-[-10px] group-hover:translate-x-0 duration-300">
-          See How <ArrowRight size={16}/>
-       </div>
-     </div>
-  </div>
+// --- REST OF COMPONENTS REMAIN THE SAME ---
+const MissionSection = () => (
+  <section className="py-32 px-10 bg-white relative z-10 border-b-[8px] border-[#493129]">
+    <div className="max-w-[1200px] mx-auto text-center space-y-12">
+      <span className="text-[#efa3a0] font-black uppercase tracking-[0.5em] text-sm">THE MISSION</span>
+      <h2 className="text-5xl md:text-7xl font-black text-[#493129] leading-tight tracking-tight uppercase">
+        WE BELIEVE CAMPUS LIFE SHOULD BE <br/>
+        <span className="relative inline-block px-4 ml-2 group cursor-default">
+          <span className="relative z-10">VIBRANT,</span>
+          <div className="absolute inset-0 bg-[#ffdec7] border-4 border-[#493129] -rotate-2 group-hover:rotate-0 group-hover:bg-[#efa3a0] transition-all duration-300"></div>
+        </span> NOT BURIED IN PAPERWORK.
+      </h2>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-16">
+        {[
+          { title: "SAVE TIME", desc: "Automated workflows mean approvals happen in minutes, not days. Get back to what matters.", icon: ClockIcon },
+          { title: "BOOST ENGAGEMENT", desc: "Centralized discovery helps students find clubs they actually care about. No more empty rooms.", icon: TrendingIcon },
+          { title: "STAY SECURE", desc: "Role-based access ensures only the right people press the big red buttons. Sleep easy.", icon: ShieldIcon }
+        ].map((item, i) => (
+          <div key={i} className="group relative p-10 border-[6px] border-[#493129] rounded-[2.5rem] bg-white text-left space-y-6 hover:shadow-[16px_16px_0px_0px_#493129] transition-all duration-500 overflow-hidden cursor-pointer">
+            <div className="absolute inset-0 bg-[#efa3a0] translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out z-0"></div>
+            <div className="relative z-10">
+                <div className="w-20 h-20 bg-[#493129] text-white rounded-2xl flex items-center justify-center group-hover:bg-white group-hover:text-[#493129] transition-colors duration-300">
+                  <item.icon size={48} />
+                </div>
+                <h4 className="text-2xl font-black uppercase mt-6 group-hover:text-white transition-colors duration-300">{item.title}</h4>
+                <p className="font-bold text-[#493129]/60 leading-relaxed group-hover:text-[#493129] transition-colors duration-300">{item.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
 );
 
-const SystemWidget = ({ title, subtitle, type }) => {
+const ChaosSection = () => {
   return (
-    <div className="bg-white border-4 border-black rounded-2xl overflow-hidden relative group hover:-translate-y-1 transition-transform shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] h-48 flex flex-col cursor-default">
-      <div className="bg-black text-white p-3 flex justify-between items-center border-b-4 border-black">
-        <div className="flex gap-2">
-          <div className="w-3 h-3 rounded-full bg-red-500"></div>
-          <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-          <div className="w-3 h-3 rounded-full bg-green-500"></div>
-        </div>
-        <span className="font-mono text-xs uppercase tracking-wider">{subtitle}</span>
-      </div>
+    <section className="py-32 px-10 bg-[#ffeadb] border-b-[8px] border-[#493129] relative z-10">
+      <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+        <div className="space-y-12">
+          <h2 className="text-7xl font-black text-[#493129] leading-[0.8] tracking-tighter uppercase">
+            CHAOS <br/> <span className="text-[#8b597b]">NEUTRALIZED.</span>
+          </h2>
+          <p className="text-2xl font-bold text-[#493129]/60 max-w-lg">
+            Stop juggling Google Forms and WhatsApp groups. We built a central nervous system for your campus.
+          </p>
+          
+          <div className="grid grid-cols-2 gap-6">
+            <div className="bg-white border-4 border-[#493129] rounded-2xl p-6 shadow-[8px_8px_0px_0px_#493129] group overflow-hidden">
+               <div className="flex justify-between items-center mb-4">
+                  <div className="flex gap-1">
+                    <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                    <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                    <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                  </div>
+                  <Lock size={24} className="opacity-20 group-hover:rotate-12 transition-transform" />
+               </div>
+               <h5 className="font-black uppercase text-sm tracking-widest mb-4">RBAC SECURITY</h5>
+               <div className="h-16 bg-stone-100 rounded-lg border-2 border-[#493129]/10 flex items-center justify-between px-4 overflow-hidden relative">
+                  <div className="flex flex-col gap-1">
+                     <div className="w-16 h-1.5 bg-[#493129]/10 rounded-full overflow-hidden">
+                        <div className="w-full h-full bg-[#efa3a0] animate-scan-fast"></div>
+                     </div>
+                     <span className="text-[10px] font-black opacity-40 uppercase tracking-tighter">ENCRYPTING...</span>
+                  </div>
+                  <div className="text-sm font-black text-green-600 bg-green-50 px-4 py-1 rounded border-2 border-green-200 animate-pulse">SECURE</div>
+               </div>
+            </div>
 
-      <div className="flex-1 p-4 relative overflow-hidden flex flex-col justify-between">
-        <h4 className="font-black text-2xl uppercase leading-none z-10 relative">{title}</h4>
+            <div className="bg-white border-4 border-[#493129] rounded-2xl p-6 shadow-[8px_8px_0px_0px_#493129] group">
+               <div className="flex justify-between items-center mb-4">
+                  <div className="flex gap-1">
+                    <div className="w-3 h-3 rounded-full bg-blue-400"></div>
+                    <div className="w-3 h-3 rounded-full bg-blue-600"></div>
+                  </div>
+                  <BarChart3 size={24} className="opacity-20" />
+               </div>
+               <h5 className="font-black uppercase text-sm tracking-widest mb-4">ANALYTICS</h5>
+               <div className="h-16 bg-stone-100 rounded-lg border-2 border-[#493129]/10 flex items-end justify-center gap-1 p-2">
+                  <div className="w-full bg-[#8b597b] animate-grow-bounce" style={{ height: '40%' }}></div>
+                  <div className="w-full bg-[#efa3a0] animate-grow-bounce" style={{ height: '80%', animationDelay: '0.2s' }}></div>
+                  <div className="w-full bg-[#8b597b] animate-grow-bounce" style={{ height: '60%', animationDelay: '0.4s' }}></div>
+                  <div className="w-full bg-[#efa3a0] animate-grow-bounce" style={{ height: '90%', animationDelay: '0.1s' }}></div>
+                  <div className="w-full bg-[#8b597b] animate-grow-bounce" style={{ height: '30%', animationDelay: '0.5s' }}></div>
+               </div>
+            </div>
+
+            <div className="bg-white border-4 border-[#493129] rounded-2xl p-6 shadow-[8px_8px_0px_0px_#493129] group relative overflow-hidden">
+               <div className="flex gap-1 mb-4">
+                  <div className="w-3 h-3 rounded-full bg-red-600 animate-pulse"></div>
+                  <div className="w-3 h-3 rounded-full bg-red-400"></div>
+               </div>
+               <h5 className="font-black uppercase text-sm tracking-widest mb-4">CONFLICT AI</h5>
+               <div className="h-16 bg-[#493129] rounded-lg border-2 border-[#493129]/10 flex items-center justify-center relative overflow-hidden">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(239,163,160,0.1)_10%,transparent_100%)] animate-ping"></div>
+                  <div className="absolute w-full h-[1px] bg-[#efa3a0] shadow-[0_0_10px_#efa3a0] animate-scan-vert"></div>
+                  <span className="text-xs font-black text-[#efa3a0] uppercase tracking-[0.2em] relative z-10">SCANNING...</span>
+               </div>
+            </div>
+
+            <div className="bg-white border-4 border-[#493129] rounded-2xl p-6 shadow-[8px_8px_0px_0px_#493129] group">
+               <div className="flex gap-1 mb-4">
+                  <div className="w-3 h-3 rounded-full bg-[#efa3a0]"></div>
+                  <div className="w-3 h-3 rounded-full bg-stone-200"></div>
+               </div>
+               <h5 className="font-black uppercase text-sm tracking-widest mb-4">APPROVALS</h5>
+               <div className="h-16 bg-stone-100 rounded-lg border-2 border-[#493129]/10 flex items-center justify-center gap-3 group-hover:bg-[#ffeadb] transition-colors">
+                  <FileCheck size={28} className="text-[#493129] animate-bounce-slow" />
+                  <div className="flex flex-col">
+                    <span className="text-xs font-black uppercase tracking-tighter">ID: #4012</span>
+                    <span className="text-xs font-bold text-green-600 uppercase">VERIFIED</span>
+                  </div>
+               </div>
+            </div>
+          </div>
+        </div>
         
-        <div className="absolute right-0 bottom-0 w-32 h-32 opacity-10 group-hover:opacity-20 transition-opacity">
-           {type === 'rbac' && <Shield size={128} />}
-           {type === 'analytics' && <BarChart3 size={128} />}
-           {type === 'conflict' && <AlertCircle size={128} />}
-           {type === 'approval' && <FileCheck size={128} />}
-        </div>
-
-        <div className="mt-4 relative z-10">
-          {type === 'rbac' && (
-            <div className="flex items-center gap-3">
-               <div className="relative">
-                 <div className="absolute inset-0 bg-green-400 rounded-full animate-ping opacity-50"></div>
-                 <div className="relative bg-green-500 text-white p-2 rounded-full border-2 border-black">
-                   <Lock size={20} />
+        <div className="relative group">
+           <div className="absolute inset-0 bg-[#8b597b] border-[8px] border-[#493129] rounded-[4rem] translate-x-6 translate-y-6"></div>
+           <div className="relative bg-[#493129] border-[8px] border-[#493129] rounded-[4rem] overflow-hidden aspect-square flex flex-col">
+              <div className="bg-white p-6 flex justify-between items-center border-b-8 border-[#493129]">
+                 <div className="flex items-center gap-3">
+                    <div className="w-4 h-4 rounded-full bg-red-500 animate-pulse"></div>
+                    <span className="text-sm font-black uppercase">Live_Transmission: Auditorium</span>
                  </div>
-               </div>
-               <div className="font-mono text-sm font-bold bg-green-100 px-2 py-1 rounded border border-green-300 text-green-800">
-                 SECURE
-               </div>
-            </div>
-          )}
-
-          {type === 'analytics' && (
-             <div className="flex items-end gap-1 h-12 w-full mt-2">
-                {[40, 70, 30, 80, 50, 90, 60].map((h, i) => (
-                  <div 
-                    key={i} 
-                    className="flex-1 bg-blue-500 border border-black hover:bg-blue-400 transition-colors"
-                    style={{ 
-                      height: `${h}%`,
-                      animation: `equalizer 1s infinite ease-in-out ${i * 0.1}s alternate`
-                    }}
-                  ></div>
-                ))}
-             </div>
-          )}
-
-          {type === 'conflict' && (
-             <div className="relative h-12 bg-stone-100 border-2 border-stone-300 rounded overflow-hidden flex items-center justify-center">
-                <div className="absolute w-full h-[2px] bg-red-500 animate-scan"></div>
-                <span className="text-xs font-bold text-red-500 uppercase tracking-widest animate-pulse">Scanning...</span>
-             </div>
-          )}
-
-          {type === 'approval' && (
-             <div className="flex gap-2 mt-2">
-                <div className="bg-stone-100 border-2 border-stone-300 p-2 rounded w-8 h-10 animate-slide-paper" style={{animationDelay: '0s'}}></div>
-                <div className="bg-stone-100 border-2 border-stone-300 p-2 rounded w-8 h-10 animate-slide-paper" style={{animationDelay: '0.2s'}}></div>
-                <div className="bg-green-400 border-2 border-black p-2 rounded w-8 h-10 flex items-center justify-center transform scale-110 shadow-sm">
-                   <CheckCircle2 size={16} className="text-white"/>
-                </div>
-             </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const PhotoRow = ({ images, direction, speed, scrollY, rotate }) => {
-  const move = direction === 'left' ? -1 : 1;
-  const xPos = (scrollY * speed * move) % 1200; 
-
-  return (
-    <div className={`flex gap-6 mb-12 ${rotate}`} style={{ transform: `translateX(${xPos}px)` }}>
-       {[...images, ...images, ...images, ...images].map((img, i) => (
-         <div key={i} className="flex-shrink-0 w-[280px] h-[220px] bg-white p-3 pb-8 border-2 border-stone-200 shadow-lg transform transition-transform hover:scale-110 hover:z-50 hover:rotate-0 rotate-odd-even cursor-pointer group relative">
-            <div className="w-full h-full overflow-hidden bg-stone-800 border border-stone-100">
-               <img src={img} alt="Campus Life" className="w-full h-full object-cover filter sepia-[0.3] group-hover:sepia-0 transition-all duration-500" />
-            </div>
-            <div className="absolute bottom-2 left-0 w-full text-center font-handwriting text-stone-600 text-sm rotate-[-1deg] opacity-70">
-              Campus Memory #{i*42}
-            </div>
-         </div>
-       ))}
-    </div>
-  );
-};
-
-// Changed 'App' to 'LandingPage' to avoid conflict with main App component
-const LandingPage = () => { 
-  const [loading, setLoading] = useState(true);
-  const [scrollY, setScrollY] = useState(0);
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const mouse = useMousePosition();
-
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 2000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrollY(window.scrollY);
-      const totalScroll = document.documentElement.scrollTop;
-      const windowHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-      setScrollProgress(totalScroll / windowHeight);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const row1Images = [
-    "https://images.unsplash.com/photo-1523580494863-6f3031224c94?q=80&w=600",
-    "https://images.unsplash.com/photo-1511632765486-a01980e01a18?q=80&w=600",
-    "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=600",
-    "https://images.unsplash.com/photo-1524178232363-1fb2b075b955?q=80&w=600",
-    "https://images.unsplash.com/photo-1595152772835-219674b2a8a6?q=80&w=600"
-  ];
-  
-  const row2Images = [
-    "https://images.unsplash.com/photo-1562774053-701939374585?q=80&w=600",
-    "https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?q=80&w=600",
-    "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=600",
-    "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?q=80&w=600",
-    "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=600"
-  ];
-
-  if (loading) {
-    return (
-      <div className="fixed inset-0 bg-[#F9F4EF] z-[100] flex flex-col items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 flex items-center justify-center">
-             <div className="w-96 h-96 bg-[#FFD166] rounded-full blur-[100px] animate-pulse"></div>
-        </div>
-        <div className="flex gap-4 items-center animate-bounce z-10">
-          <Box size={64} className="text-orange-500" />
-          <h1 className="text-8xl font-black tracking-tighter text-orange-600">
-            LOADING
-          </h1>
-        </div>
-        <div className="w-64 h-2 bg-stone-200 rounded-full mt-8 overflow-hidden z-10">
-          <div className="h-full bg-orange-500 animate-progress"></div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-[#F9F4EF] min-h-screen overflow-x-hidden text-stone-900 font-sans cursor-none selection:bg-orange-400 selection:text-white">
-      
-      <div 
-        className="fixed top-0 left-0 w-8 h-8 bg-orange-500 rounded-full pointer-events-none z-[100] mix-blend-difference transition-transform duration-100 ease-out hidden md:block"
-        style={{ 
-          transform: `translate(${mouse.x - 16}px, ${mouse.y - 16}px) scale(${1 + scrollProgress})` 
-        }}
-      />
-      
-      <div className="fixed top-0 left-0 h-2 bg-orange-500 z-[101]" style={{ width: `${scrollProgress * 100}%` }}></div>
-
-      {/* --- NAV --- */}
-      <nav className={`fixed top-0 w-full p-6 flex justify-between items-center z-50 transition-all duration-300 ${scrollProgress > 0.05 ? 'bg-white/90 backdrop-blur-md py-4 border-b-2 border-stone-100' : ''}`}>
-        <div className="text-3xl font-black tracking-tighter text-orange-600 flex items-center gap-2 group cursor-pointer">
-          <div className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center group-hover:rotate-180 transition-transform duration-500">C</div>
-          CAMPUS<span className="text-black">OS</span>
-        </div>
-        <div className="hidden md:flex gap-8 font-bold uppercase text-sm tracking-widest">
-           <a href="#mission" className="hover:text-orange-500 transition-colors">Mission</a>
-           <a href="#features" className="hover:text-orange-500 transition-colors">Features</a>
-           <a href="#feed" className="hover:text-orange-500 transition-colors">Live Feed</a>
-        </div>
-        <Link to="/login">
-            <button className="bg-black text-white px-8 py-3 rounded-full font-bold hover:bg-orange-500 hover:scale-110 transition-all shadow-lg border-2 border-transparent hover:border-black">
-            ENTER PORTAL
-            </button>
-        </Link>
-      </nav>
-
-      {/* --- HERO SECTION --- */}
-      <header className="relative min-h-screen flex flex-col items-center justify-center perspective-1000 overflow-hidden pt-20">
-        <Orb size="600px" color="#FFD166" top="-10%" left="-10%" delay="0" />
-        <Orb size="500px" color="#EF476F" top="40%" left="60%" delay="1" />
-        <Orb size="400px" color="#06D6A0" top="60%" left="-10%" delay="2" />
-        <Orb size="300px" color="#118AB2" top="10%" left="80%" delay="3" speed="animate-float" />
-
-        <div className="relative z-10 text-center transform hover:scale-[1.02] transition-transform duration-700">
-          <FloatingBadge className="top-[-60px] md:top-[-80px] right-[-20px] md:right-[-40px] rotate-12" delay={0.5}>
-            <div className="bg-[#FFD166] text-black font-black p-3 md:p-4 rounded-full border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] uppercase text-xs md:text-sm animate-bounce">
-              Now Live v2.0
-            </div>
-          </FloatingBadge>
-          
-          <h1 className="text-[13vw] leading-[0.8] font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-orange-500 to-red-600 drop-shadow-sm filter">
-            UNIFIED<br/>CAMPUS
-          </h1>
-          
-          <Link to="/signup" className="mt-12 inline-block bg-white border-4 border-black px-12 py-6 rounded-full shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transform -rotate-2 hover:rotate-0 transition-transform group cursor-pointer hover:bg-black hover:text-white hover:border-white">
-             <p className="text-xl md:text-3xl font-bold uppercase tracking-wide flex items-center gap-4">
-               The Revolution is Here <ArrowRight className="group-hover:translate-x-2 transition-transform" />
-             </p>
-          </Link>
-        </div>
-
-        {/* 3D Floating Elements */}
-        <div className="absolute top-1/3 left-10 w-24 h-24 bg-[#EF476F] rounded-2xl border-4 border-black animate-float-slow shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rotate-12 hidden lg:flex items-center justify-center opacity-80 hover:scale-125 transition-transform cursor-pointer">
-            <Calendar size={40} className="text-white"/>
-        </div>
-        <div className="absolute bottom-1/4 right-20 w-32 h-32 bg-[#06D6A0] rounded-full border-4 border-black animate-float shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] -rotate-12 hidden lg:flex items-center justify-center opacity-80 hover:scale-125 transition-transform cursor-pointer" style={{animationDelay: '1.5s'}}>
-            <Zap size={50} className="text-black"/>
-        </div>
-         <div className="absolute bottom-10 left-1/4 w-20 h-20 bg-[#118AB2] rounded-lg border-4 border-black animate-bounce-slow shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] rotate-3 hidden lg:flex items-center justify-center opacity-80 hover:scale-125 transition-transform cursor-pointer">
-            <Users size={32} className="text-white"/>
-        </div>
-      </header>
-
-      {/* --- LIVE ACTIVITY FEED --- */}
-      <div id="feed" className="bg-stone-900 py-4 border-y-4 border-black overflow-hidden relative z-20">
-        <div className="flex gap-12 animate-marquee whitespace-nowrap items-center">
-            {[1,2,3,4,5].map((i) => (
-              <React.Fragment key={i}>
-                <div className="flex items-center gap-3 text-stone-400 font-mono text-sm">
-                   <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                   <span className="text-white font-bold">EVENT APPROVED:</span> Hackathon 2024
-                </div>
-                <div className="flex items-center gap-3 text-stone-400 font-mono text-sm">
-                   <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
-                   <span className="text-white font-bold">BOOKING:</span> Lab 3 (Robotics Club)
-                </div>
-                <div className="flex items-center gap-3 text-stone-400 font-mono text-sm">
-                   <div className="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></div>
-                   <span className="text-white font-bold">NEW MEMBER:</span> Sarah J. joined Design Club
-                </div>
-              </React.Fragment>
-            ))}
-        </div>
-      </div>
-
-      {/* --- MANIFESTO --- */}
-      <section id="mission" className="py-32 px-6 bg-white relative z-10">
-        <div className="max-w-6xl mx-auto text-center">
-           <p className="text-xl font-bold text-orange-500 tracking-widest uppercase mb-8">The Mission</p>
-           <h2 className="text-4xl md:text-6xl font-black leading-tight mb-20">
-             WE BELIEVE CAMPUS LIFE SHOULD BE <span className="bg-[#FFD166] px-2 text-black transform skew-x-12 inline-block border-2 border-black hover:skew-x-0 transition-transform">VIBRANT</span>, NOT BURIED IN PAPERWORK.
-           </h2>
-           
-           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
-              <ManifestoCard 
-                icon={<Clock size={32} />}
-                title="Save Time"
-                desc="Automated workflows mean approvals happen in minutes, not days. Get back to what matters."
-                color="bg-red-500"
-                hoverColor="bg-[#EF476F]"
-              />
-              <ManifestoCard 
-                icon={<TrendingUp size={32} />}
-                title="Boost Engagement"
-                desc="Centralized discovery helps students find clubs they actually care about. No more empty rooms."
-                color="bg-green-500"
-                hoverColor="bg-[#06D6A0]"
-              />
-              <ManifestoCard 
-                icon={<ShieldCheck size={32} />}
-                title="Stay Secure"
-                desc="Role-based access ensures only the right people press the big red buttons. Sleep easy."
-                color="bg-blue-500"
-                hoverColor="bg-[#118AB2]"
-              />
+                 <RefreshCw size={24} className="animate-spin-slow opacity-20" />
+              </div>
+              <div className="flex-1 bg-stone-200 relative grayscale group-hover:grayscale-0 transition-all duration-700">
+                 <img src="https://images.unsplash.com/photo-1523580494863-6f3031224c94?q=80&w=800" className="w-full h-full object-cover" alt="Control" />
+                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                 <div className="absolute bottom-10 left-10 text-white space-y-2">
+                    <span className="text-xs font-black uppercase tracking-widest opacity-60">Dashboard View_OS v5.4</span>
+                    <h3 className="text-6xl font-black uppercase leading-none transform translate-y-4 group-hover:translate-y-0 transition-transform">COMPLETE <br/> CONTROL</h3>
+                 </div>
+              </div>
            </div>
         </div>
-      </section>
+      </div>
+    </section>
+  );
+};
 
-      {/* --- PROBLEM/SOLUTION SPLIT --- */}
-      <section className="py-32 px-6 relative z-10 bg-[#F9F4EF]">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-            
-            <div className="relative">
-              <SectionTitle>
-                Chaos <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">Neutralized</span>
-              </SectionTitle>
-              <p className="text-2xl font-medium leading-relaxed text-stone-700 mb-10">
-                Stop juggling Google Forms and WhatsApp groups. We built a central nervous system for your campus.
-              </p>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                 <SystemWidget title="RBAC Security" subtitle="Sys.Lock_v2" type="rbac" />
-                 <SystemWidget title="Analytics" subtitle="Data.Stream_Live" type="analytics" />
-                 <SystemWidget title="Conflict AI" subtitle="Auto.Detect_On" type="conflict" />
-                 <SystemWidget title="Approvals" subtitle="Workflow.Speed_Max" type="approval" />
-              </div>
+const StackingTab = ({ index, title, icon: Icon, color, content, features }) => {
+    const zIndex = 10 + index;
+    const stickyTop = 140 + (index * 45);
+    return (
+        <div className="sticky w-full mb-20 md:mb-32 transition-all duration-700" style={{ top: `${stickyTop}px`, zIndex }}>
+            <div className={`w-full min-h-[500px] border-[8px] border-[#493129] rounded-[4rem] shadow-[20px_20px_0px_0px_#493129] overflow-hidden flex flex-col md:flex-row ${color} transition-all`}>
+                <div className="md:w-5/12 p-12 flex flex-col justify-between">
+                    <div>
+                        <div className="w-20 h-20 bg-white border-4 border-[#493129] rounded-2xl flex items-center justify-center shadow-xl mb-8 transform -rotate-6">
+                            <Icon size={40} className="text-[#493129]" />
+                        </div>
+                        <span className="font-black text-[#493129]/40 uppercase tracking-[0.6em] text-xs">Layer_0{index + 1}</span>
+                        <h3 className="text-5xl md:text-6xl font-black text-[#493129] uppercase tracking-tighter leading-none mt-4">{title}</h3>
+                    </div>
+                    <p className="text-xl font-bold text-[#493129]/70 leading-tight border-l-8 border-[#493129] pl-8 mt-10">{content}</p>
+                </div>
+                <div className="md:w-7/12 bg-white/40 p-12 md:p-16 border-t-[8px] md:border-t-0 md:border-l-[8px] border-[#493129] backdrop-blur-md">
+                    <div className="grid gap-8">
+                        {features.map((feat, i) => (
+                            <div key={i} className="flex items-start gap-6 group">
+                                <div className="w-12 h-12 bg-[#493129] text-white rounded-xl flex items-center justify-center font-black text-sm shadow-lg shrink-0 group-hover:bg-[#8b597b] transition-colors">{i + 1}</div>
+                                <div>
+                                    <h4 className="text-2xl font-black text-[#493129] uppercase tracking-tight mb-1">{feat.label}</h4>
+                                    <p className="font-bold text-[#493129]/60 text-sm leading-relaxed">{feat.desc}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
+        </div>
+    );
+};
 
-            <div className="relative h-[600px] w-full perspective-1000 group mt-10 lg:mt-0">
-               <div className="absolute top-10 right-10 w-full h-full bg-black rounded-[4rem] transform rotate-6 opacity-20"></div>
-               <div className="absolute top-5 right-5 w-full h-full bg-[#EF476F] rounded-[4rem] transform rotate-3 border-4 border-black"></div>
-               <div className="absolute inset-0 bg-[#FFD166] rounded-[4rem] border-4 border-black shadow-[20px_20px_0px_0px_rgba(0,0,0,1)] overflow-hidden transform transition-all duration-500 hover:-translate-y-2 hover:-translate-x-2">
-                  <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center filter grayscale group-hover:grayscale-0 transition-all duration-700 scale-110"></div>
-                  <div className="absolute top-8 left-8 bg-white/90 backdrop-blur border-2 border-black p-4 rounded-xl shadow-lg transform -rotate-2 animate-float">
-                     <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                        <span className="font-bold font-mono text-xs">LIVE: AUDITORIUM</span>
-                     </div>
-                  </div>
-                  <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/90 to-transparent p-10">
-                    <p className="font-mono text-sm mb-2 text-[#FFD166]">DASHBOARD VIEW</p>
-                    <h3 className="text-4xl font-black uppercase text-white">Complete<br/>Control</h3>
-                  </div>
-               </div>
-               <div className="absolute -bottom-10 -left-10 bg-white p-6 rounded-full border-4 border-black animate-spin-slow shadow-lg z-20">
-                  <Activity size={40} className="text-orange-500"/>
-               </div>
+const VisualArchive = () => {
+    const row1 = [
+        "https://images.unsplash.com/photo-1523580494863-6f3031224c94?q=80&w=600",
+        "https://images.unsplash.com/photo-1511632765486-a01980e01a18?q=80&w=600",
+        "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=600",
+        "https://images.unsplash.com/photo-1524178232363-1fb2b075b955?q=80&w=600",
+        "https://images.unsplash.com/photo-1595152772835-219674b2a8a6?q=80&w=600"
+    ];
+    const row2 = [
+        "https://images.unsplash.com/photo-1562774053-701939374585?q=80&w=600",
+        "https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?q=80&w=600",
+        "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=600",
+        "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?q=80&w=600",
+        "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=600"
+    ];
+    return (
+        <section id="gallery" className="py-32 bg-white border-y-[8px] border-[#493129] overflow-hidden relative z-10">
+            <div className="max-w-[1400px] mx-auto px-10 mb-16">
+                <span className="text-[#8b597b] font-black uppercase tracking-[0.5em] text-sm">Visual_Ledger // Media</span>
+                <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter mt-4 text-[#493129]">THE ARCHIVE.</h2>
             </div>
+            <div className="space-y-8">
+                <div className="flex gap-8 animate-marquee whitespace-nowrap">
+                    {[...row1, ...row1].map((img, i) => (
+                        <div key={i} className="w-[350px] h-[250px] shrink-0 border-4 border-[#493129] rounded-3xl overflow-hidden shadow-xl transform hover:scale-105 transition-transform">
+                            <img src={img} alt="Campus Event" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500" />
+                        </div>
+                    ))}
+                </div>
+                <div className="flex gap-8 animate-marquee-reverse whitespace-nowrap">
+                    {[...row2, ...row2].map((img, i) => (
+                        <div key={i} className="w-[350px] h-[250px] shrink-0 border-4 border-[#493129] rounded-3xl overflow-hidden shadow-xl transform hover:scale-105 transition-transform">
+                            <img src={img} alt="Campus Event" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500" />
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </section>
+    );
+};
+
+const LandingPage = () => {
+  const scrollProgress = useScrollProgress();
+  return (
+    <div className="bg-[#ffeadb] min-h-screen font-poppins text-[#493129] selection:bg-[#8b597b] selection:text-white pb-0.5">
+      <div className="fixed top-0 left-0 h-3 bg-[#8b597b] z-[100] transition-all" style={{ width: `${scrollProgress * 100}%` }}></div>
+      <nav className="fixed top-0 w-full p-6 md:p-10 flex justify-between items-center z-[80] bg-[#ffeadb]/90 backdrop-blur-lg border-b-[6px] border-[#493129]">
+        <div className="flex items-center gap-12">
+            <div className="text-3xl font-black tracking-tighter flex items-center gap-4 group cursor-pointer">
+                <div className="w-14 h-14 bg-[#493129] text-[#ffeadb] rounded-xl flex items-center justify-center group-hover:rotate-12 transition-transform shadow-lg">U</div>
+                <div className="flex flex-col -space-y-1">
+                    <span className="text-3xl">UNIFIED</span>
+                    <span className="text-[#8b597b] text-base font-bold tracking-[0.3em]">CAMPUS</span>
+                </div>
+            </div>
+            <div className="hidden xl:flex gap-12 font-black uppercase text-sm tracking-[0.4em] ml-8">
+                {['Infrastructure', 'Gallery', 'Impact'].map(item => (
+                    <a key={item} href={`#${item.toLowerCase()}`} className="hover:text-[#8b597b] transition-all relative py-2 group">
+                        {item}
+                        <div className="absolute -bottom-1 left-0 w-0 h-1 bg-[#8b597b] group-hover:w-full transition-all duration-300"></div>
+                    </a>
+                ))}
+            </div>
+        </div>
+        <button className="bg-[#493129] text-white px-10 py-4 rounded-full font-black text-sm uppercase tracking-widest shadow-[6px_6px_0px_0px_#8b597b] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all">Launch Portal</button>
+      </nav>
+
+      <section id="hero" className="relative min-h-screen flex items-center justify-center pt-48 pb-20 px-10 md:px-20 overflow-hidden">
+        <Orb size="1200px" color="#8b597b" top="-20%" left="-15%" delay="0" />
+        <Orb size="1000px" color="#efa3a0" top="30%" left="65%" delay="2" />
+        <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+          <div className="relative z-10 space-y-12">
+            <div className="inline-flex items-center gap-4 bg-[#493129] text-white px-10 py-3.5 rounded-full font-black text-sm uppercase tracking-widest shadow-xl">
+              <Rocket size={24} className="text-[#efa3a0]" /> Build v5.4 Operational
+            </div>
+            <h1 className="text-6xl md:text-8xl lg:text-9xl font-black leading-[0.85] tracking-tighter uppercase text-[#493129]">
+                CENTRALIZED <br/> 
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#8b597b] via-[#493129] to-[#efa3a0]">CAMPUS.</span> <br/> 
+                LOGISTICS.
+            </h1>
+            <p className="text-2xl md:text-3xl font-bold text-[#493129]/60 max-w-xl leading-snug border-l-[12px] border-[#8b597b] pl-10 py-4">
+                Decentralized student management. One unified OS for event lifecycles, resource hubs, and identity verification.
+            </p>
+            <div className="flex gap-12 pt-6">
+                {[
+                    { val: "0.4ms", label: "Sync Latency" },
+                    { val: "100%", label: "Collision Guard" }
+                ].map((s, i) => (
+                    <div key={i} className="space-y-2">
+                        <h4 className="text-5xl font-black">{s.val}</h4>
+                        <p className="text-[#8b597b] font-black uppercase text-sm tracking-widest">{s.label}</p>
+                    </div>
+                ))}
+            </div>
+          </div>
+          <div className="flex justify-center lg:justify-end items-center h-full">
+            <AuthGateway />
           </div>
         </div>
       </section>
 
-      {/* --- STATS SECTION --- */}
-      <section className="bg-black text-[#F2E8CF] py-24 border-y-8 border-[#EF476F] mt-20">
-         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 divide-y md:divide-y-0 md:divide-x divide-stone-800">
-            <StatCounter end={50} suffix="+" label="Active Clubs" color="text-[#FFD166]" />
-            <StatCounter end={1200} suffix="" label="Events Managed" color="text-[#EF476F]" />
-            <StatCounter end={98} suffix="%" label="Faster Approvals" color="text-[#06D6A0]" />
-         </div>
-      </section>
+      <MissionSection />
+      <VisualArchive />
+      <ChaosSection />
 
-      {/* --- FEATURES GRID (The Stack) --- */}
-      <section id="features" className="py-32 bg-stone-900 text-[#F2E8CF] relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10" style={{backgroundImage: 'radial-gradient(#888 2px, transparent 2px)', backgroundSize: '30px 30px'}}></div>
-
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="text-center mb-24">
-             <h2 className="text-6xl md:text-9xl font-black uppercase text-transparent bg-clip-text bg-gradient-to-r from-[#FFD166] to-[#EF476F]">
-               The Stack
-             </h2>
-             <p className="text-xl mt-6 font-mono text-stone-400">EVERYTHING YOU NEED TO RUN THE SHOW</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <FeatureCard delay={0} title="Event Lifecycle" desc="Draft, approve, publish. A seamless pipeline." icon={<Calendar size={40}/>} color="bg-[#EF476F]" rotation="rotate-1" />
-            <FeatureCard delay={100} title="Resource Hub" desc="Book labs and halls without conflict." icon={<Box size={40}/>} color="bg-[#FFD166]" rotation="-rotate-2 lg:translate-y-12" />
-            <FeatureCard delay={200} title="Club Collab" desc="Joint events made easy." icon={<Users size={40}/>} color="bg-[#118AB2]" rotation="rotate-2" />
-            <FeatureCard delay={300} title="Smart Analytics" desc="Track attendance and budget burn." icon={<BarChart3 size={40}/>} color="bg-[#06D6A0]" rotation="-rotate-1" />
-            <FeatureCard delay={400} title="Instant Comms" desc="Context-aware chat groups." icon={<MessageSquare size={40}/>} color="bg-[#FF9F1C]" rotation="rotate-3 lg:translate-y-12" />
-            <FeatureCard delay={500} title="User Profiles" desc="Showcase membership history." icon={<ShieldCheck size={40}/>} color="bg-[#CBF3F0]" rotation="-rotate-2" />
-          </div>
+      <section id="infrastructure" className="py-40 px-10 md:px-20 max-w-[1500px] mx-auto relative">
+        <div className="mb-40 text-left space-y-8 relative z-10">
+            <span className="font-black uppercase tracking-[0.8em] text-[#8b597b] text-sm block">Architecture // Stacking System</span>
+            <h2 className="text-7xl md:text-9xl font-black text-[#493129] uppercase tracking-tighter leading-none">THE STACK.</h2>
+            <div className="pt-12 flex justify-start">
+                <div className="p-8 border-[6px] border-[#493129] rounded-full animate-bounce">
+                    <ArrowDown size={48} />
+                </div>
+            </div>
+        </div>
+        <div className="relative pb-40">
+            <StackingTab index={0} title="Workflow Node" icon={Calendar} color="bg-[#ffeadb]" content="Automated event lifecycle management from submission to archive." features={[{ label: "Smart Pipelines", desc: "Automated routing for venue approvals and equipment requests." }, { label: "Sync Broadcast", desc: "Instantly update all student nodes as event status changes." }]} />
+            <StackingTab index={1} title="Resource Map" icon={Database} color="bg-[#ffdec7]" content="Real-time centralized control over venues and equipment hubs." features={[{ label: "Collision Shield", desc: "Proprietary database logic prevents overlapping bookings." }, { label: "Physical Ledger", desc: "Track equipment checkout history with granular audit logs." }]} />
+            <StackingTab index={2} title="Identity Mesh" icon={Fingerprint} color="bg-[#efa3a0]" content="Unified RBAC architecture that respects institutional hierarchies." features={[{ label: "Verified Nodes", desc: "Single identity sync across events, resources, and social streams." }, { label: "Gov Console", desc: "Complete transparency of institutional actions and audit trails." }]} />
         </div>
       </section>
 
-      {/* --- PHOTO FLOW --- */}
-      <section className="py-32 bg-[#118AB2] relative overflow-hidden min-h-screen flex flex-col justify-center">
-         <Orb size="1200px" color="#000" top="50%" left="50%" delay="0" speed="opacity-20" />
-         
-         <div className="relative z-10">
-            <div className="text-center mb-24">
-               <h2 className="text-5xl md:text-8xl font-black text-white uppercase italic transform -rotate-2">
-                 Memories Made<br/>Hassle Free
-               </h2>
-               <div className="mt-8 inline-block bg-white px-6 py-2 rounded-full font-mono font-bold uppercase rotate-2">
-                 Swipe to explore
-               </div>
+      <footer id="footer" className="bg-[#493129] text-white pt-32 pb-16 px-10 md:px-20 rounded-t-[5rem] relative overflow-hidden">
+        <div className="absolute -top-10 -right-20 text-[25rem] font-black text-white/[0.03] pointer-events-none select-none tracking-tighter">UNIFIED</div>
+        <div className="max-w-[1400px] mx-auto relative z-10">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 pb-20">
+                <div className="space-y-12">
+                    <div className="text-5xl font-black tracking-tighter flex items-center gap-6">
+                        <div className="w-20 h-20 bg-white text-[#493129] rounded-2xl flex items-center justify-center">U</div>
+                        <span>UNIFIED<br/><span className="text-[#efa3a0] text-2xl tracking-[0.3em]">CAMPUS_OS</span></span>
+                    </div>
+                    <p className="text-xl font-bold text-white/50 max-w-md leading-relaxed">Replacing fragmented legacy systems with a single, high-fidelity infrastructure for the next generation of campus life.</p>
+                    <div className="flex gap-6">
+                        {[Instagram, Twitter, Linkedin].map((Icon, i) => (
+                            <a key={i} href="#" className="w-14 h-14 rounded-xl bg-white/5 flex items-center justify-center hover:bg-[#8b597b] transition-all border border-white/10"><Icon size={28} /></a>
+                        ))}
+                    </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
+                    {[{ title: "INFRA", items: ["EVENT NODES", "RESOURCE MAP", "IDENTITY HUB"] }, { title: "GOVERN", items: ["POLICIES", "AUDIT LOGS", "SECURITY"] }, { title: "INTEL", items: ["ROI DASH", "PULSE REPORT", "ANALYTICS"] }, { title: "CORE", items: ["DOCS", "STATUS", "SUPPORT"] }].map((col, idx) => (
+                      <div key={idx} className="space-y-8">
+                          <h5 className="font-black text-white text-4xl uppercase tracking-tighter">{col.title}</h5>
+                          <div className="w-full h-1.5 bg-[#efa3a0] mb-6"></div>
+                          <ul className="space-y-4 font-bold text-sm tracking-[0.2em] text-white/60">{col.items.map((item, i) => (<li key={i}><a href="#" className="hover:text-white transition-colors">{item}</a></li>))}</ul>
+                      </div>
+                    ))}
+                </div>
             </div>
-            
-            <div className="w-full overflow-hidden scale-105 space-y-8">
-               <PhotoRow images={row1Images} direction="left" speed={0.5} scrollY={scrollY} rotate="rotate-2" />
-               <PhotoRow images={row2Images} direction="right" speed={0.6} scrollY={scrollY} rotate="-rotate-1" />
+            <div className="pt-12 flex flex-col md:flex-row justify-between items-center gap-8 text-sm font-black uppercase tracking-[0.3em] text-white/20 border-t-2 border-white/10">
+                <p>© 2026 UNIFIED CAMPUS INFRASTRUCTURE. ALL PROTOCOLS ENFORCED.</p>
+                <div className="flex gap-12">
+                    <a href="#" className="hover:text-white transition-colors">Privacy_Terms</a>
+                    <a href="#" className="hover:text-white transition-colors">Node_Deployment</a>
+                    <a href="#" className="hover:text-white transition-colors">System_Uptime_99.9%</a>
+                </div>
             </div>
-
-            <div className="text-center mt-24">
-               <button className="bg-black text-white px-10 py-5 rounded-full font-black uppercase text-xl border-4 border-white shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all group">
-                  See the Gallery <span className="inline-block group-hover:rotate-45 transition-transform">↗</span>
-               </button>
-            </div>
-         </div>
-      </section>
-
-      {/* --- FOOTER CTA --- */}
-      <footer className="bg-[#EF476F] min-h-[90vh] flex flex-col items-center justify-center relative overflow-hidden rounded-t-[4rem] -mt-20 border-t-8 border-black z-20">
-        <div className="absolute inset-0 flex items-center justify-center opacity-30">
-           <div className="w-[600px] md:w-[1000px] h-[600px] md:h-[1000px] border-[60px] border-black rounded-full animate-ping-slow"></div>
-        </div>
-
-        <div className="z-10 text-center px-4">
-          <div className="inline-block bg-white text-black font-bold px-6 py-2 rounded-full mb-8 animate-bounce border-2 border-black">
-             Spots filling up for Fall 2024
-          </div>
-          <h2 className="text-[12vw] font-black uppercase leading-[0.85] text-white drop-shadow-[8px_8px_0px_rgba(0,0,0,1)]">
-            Ready to<br/>Launch?
-          </h2>
-          
-          <Link to="/signup">
-            <button className="mt-16 bg-white text-black text-2xl md:text-4xl font-black py-8 px-16 rounded-full shadow-[16px_16px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:translate-y-2 hover:translate-x-2 transition-all border-4 border-black flex items-center gap-4 mx-auto group">
-                START NOW <ArrowRight size={48} className="group-hover:translate-x-4 transition-transform"/>
-            </button>
-          </Link>
-        </div>
-
-        <div className="absolute bottom-10 w-full flex justify-between px-10 font-bold uppercase tracking-widest text-black/40">
-           <span>© 2024 CampusOS</span>
-           <span className="hidden md:inline">Designed for Revolutionaries</span>
         </div>
       </footer>
-
-      {/* --- GLOBAL STYLES & ANIMATIONS --- */}
       <style>{`
-        @keyframes float {
-          0% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-20px) rotate(5deg); }
-          100% { transform: translateY(0px) rotate(0deg); }
-        }
-        @keyframes float-slow {
-          0% { transform: translateY(0px) rotate(12deg); }
-          50% { transform: translateY(-30px) rotate(8deg); }
-          100% { transform: translateY(0px) rotate(12deg); }
-        }
-        @keyframes marquee {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        @keyframes spin-slow {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        @keyframes ping-slow {
-          0% { transform: scale(1); opacity: 0.8; }
-          100% { transform: scale(1.5); opacity: 0; }
-        }
-        @keyframes progress {
-          0% { width: 0%; }
-          100% { width: 100%; }
-        }
-        @keyframes slide-up {
-          0% { transform: translateY(50px); opacity: 0; }
-          100% { transform: translateY(0); opacity: 1; }
-        }
-        @keyframes pulse-slow {
-          0%, 100% { opacity: 0.6; transform: scale(1); }
-          50% { opacity: 0.4; transform: scale(1.1); }
-        }
-        @keyframes grow-bar {
-          0% { height: 0%; }
-          100% { height: 100%; }
-        }
-        @keyframes scan {
-            0% { top: 0; opacity: 1; }
-            50% { opacity: 1; }
-            100% { top: 100%; opacity: 0; }
-        }
-        @keyframes equalizer {
-            0% { height: 30%; }
-            100% { height: 100%; }
-        }
-        @keyframes slide-paper {
-            0% { transform: translateX(0) scale(1); opacity: 1; }
-            100% { transform: translateX(100px) scale(0.8); opacity: 0; }
-        }
-        
-        .animate-float { animation: float 6s ease-in-out infinite; }
-        .animate-float-slow { animation: float-slow 8s ease-in-out infinite; }
-        .animate-marquee { animation: marquee 30s linear infinite; }
-        .animate-spin-slow { animation: spin-slow 12s linear infinite; }
-        .animate-ping-slow { animation: ping-slow 3s cubic-bezier(0, 0, 0.2, 1) infinite; }
-        .animate-progress { animation: progress 2s ease-out forwards; }
-        .animate-slide-up { animation: slide-up 0.8s ease-out forwards; }
-        .animate-pulse-slow { animation: pulse-slow 4s ease-in-out infinite; }
-        .animate-grow-bar { animation: grow-bar 1s ease-out forwards; }
-        .animate-scan { animation: scan 2s linear infinite; }
-        .animate-slide-paper { animation: slide-paper 2s infinite ease-in-out; }
-        
-        .perspective-1000 { perspective: 1000px; }
-        
-        .rotate-odd-even:nth-child(odd) { transform: rotate(2deg); }
-        .rotate-odd-even:nth-child(even) { transform: rotate(-2deg); }
-        .rotate-odd-even:hover { transform: rotate(0deg) scale(1.1) !important; z-index: 50; }
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap');
+        * { font-family: 'Poppins', sans-serif !important; cursor: default !important; }
+        button, a { cursor: pointer !important; }
+        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        .animate-marquee { animation: marquee 40s linear infinite; }
+        @keyframes marquee-reverse { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
+        .animate-marquee-reverse { animation: marquee-reverse 40s linear infinite; }
+        @keyframes pulse-slow { 0%, 100% { opacity: 0.1; transform: scale(1); } 50% { opacity: 0.25; transform: scale(1.05); } }
+        .animate-pulse-slow { animation: pulse-slow 10s ease-in-out infinite; }
+        @keyframes grow-bounce { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.3); } }
+        .animate-grow-bounce { animation: grow-bounce 2s ease-in-out infinite; transform-origin: bottom; }
+        @keyframes scan-vert { 0% { top: 0; } 100% { top: 100%; } }
+        .animate-scan-vert { animation: scan-vert 2s linear infinite; }
+        @keyframes scan-fast { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+        .animate-scan-fast { animation: scan-fast 1.5s linear infinite; }
+        @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .animate-spin-slow { animation: spin-slow 8s linear infinite; }
+        @keyframes bounce-slow { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .animate-bounce-slow { animation: bounce-slow 3s ease-in-out infinite; }
+        html { scroll-behavior: smooth; overflow-x: hidden; }
+        ::-webkit-scrollbar { width: 12px; }
+        ::-webkit-scrollbar-track { background: #ffeadb; }
+        ::-webkit-scrollbar-thumb { background: #493129; border-radius: 10px; border: 2px solid #ffeadb; }
       `}</style>
     </div>
   );
