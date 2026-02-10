@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/components.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <% if (locals.showNavbar !== false) { %>
+        <%- include('../components/navbar') %>
+    <% } %>
+    
+    <main class="main-content">
+<div class="page-header">
+    <div class="container">
+        <h1 class="page-title">
+            <i class="fas fa-plus-circle"></i>
+            Create New Event
+        </h1>
+        <p class="page-subtitle">Plan and submit your hackathon event for approval</p>
+    </div>
+</div>
+
+<div class="container">
+    <% if (locals.error) { %>
+        <div class="alert alert-error">
+            <i class="fas fa-exclamation-circle"></i>
+            <%= error %>
+        </div>
+    <% } %>
+    
+    <div class="form-container">
+        <form action="/club/create-event" method="POST" class="event-form">
+            <div class="form-section">
+                <h3 class="section-title">Basic Information</h3>
+                
+                <div class="form-group">
+                    <label for="name" class="form-label">Event Name *</label>
+                    <input type="text" id="name" name="name" class="form-input" required 
+                           placeholder="Enter event name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="description" class="form-label">Description *</label>
+                    <textarea id="description" name="description" class="form-textarea" rows="4" required 
+                              placeholder="Describe your event, its goals, and what participants can expect"></textarea>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h3 class="section-title">Event Details</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="date" class="form-label">Event Date *</label>
+                        <input type="date" id="date" name="date" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="startTime" class="form-label">Start Time *</label>
+                        <input type="time" id="startTime" name="startTime" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="endTime" class="form-label">End Time *</label>
+                        <input type="time" id="endTime" name="endTime" class="form-input" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="venueId" class="form-label">Venue *</label>
+                        <select id="venueId" name="venueId" class="form-select" required>
+                            <option value="">Select a venue</option>
+                            <% venues.forEach(venue => { %>
+                                <option value="<%= venue._id %>">
+                                    <%= venue.name %> (Capacity: <%= venue.capacity %>)
+                                </option>
+                            <% }) %>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="clubId" class="form-label">Organizing Club *</label>
+                        <select id="clubId" name="clubId" class="form-select" required>
+                            <option value="">Select organizing club</option>
+                            <% clubs.forEach(club => { %>
+                                <option value="<%= club._id %>"><%= club.name %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="budget" class="form-label">Budget (₹) *</label>
+                        <input type="number" id="budget" name="budget" class="form-input" required 
+                               placeholder="Enter budget amount" min="0">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h3 class="section-title">Collaboration</h3>
+                
+                <div class="form-group">
+                    <label for="collaboratorIds" class="form-label">Collaborating Clubs (Optional)</label>
+                    <select id="collaboratorIds" name="collaboratorIds" class="form-select" multiple>
+                        <% clubs.forEach(club => { %>
+                            <option value="<%= club._id %>"><%= club.name %></option>
+                        <% }) %>
+                    </select>
+                    <small class="form-help">Hold Ctrl/Cmd to select multiple clubs</small>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <a href="/club/dashboard" class="btn btn-secondary">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane"></i>
+                    Submit for Approval
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set minimum date to today
+    const dateInput = document.getElementById('date');
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.min = today;
+    
+    // Validate end time is after start time
+    const startTimeInput = document.getElementById('startTime');
+    const endTimeInput = document.getElementById('endTime');
+    
+    function validateTimes() {
+        if (startTimeInput.value && endTimeInput.value) {
+            if (endTimeInput.value <= startTimeInput.value) {
+                endTimeInput.setCustomValidity('End time must be after start time');
+            } else {
+                endTimeInput.setCustomValidity('');
+            }
+        }
+    }
+    
+    startTimeInput.addEventListener('change', validateTimes);
+    endTimeInput.addEventListener('change', validateTimes);
+    
+    // Form submission validation
+    const form = document.querySelector('.event-form');
+    form.addEventListener('submit', function(e) {
+        const clubId = document.getElementById('clubId').value;
+        const venueId = document.getElementById('venueId').value;
+        const name = document.getElementById('name').value;
+        const date = document.getElementById('date').value;
+        
+        console.log('=== FORM SUBMISSION DEBUG ===');
+        console.log('Form data being submitted:', {
+            name: name,
+            clubId: clubId,
+            venueId: venueId,
+            date: date,
+            description: document.getElementById('description').value,
+            startTime: document.getElementById('startTime').value,
+            endTime: document.getElementById('endTime').value,
+            budget: document.getElementById('budget').value
+        });
+        
+        if (!clubId) {
+            alert('Please select an organizing club');
+            e.preventDefault();
+            return false;
+        }
+        
+        if (!venueId) {
+            alert('Please select a venue');
+            e.preventDefault();
+            return false;
+        }
+        
+        if (!name.trim()) {
+            alert('Please enter an event name');
+            e.preventDefault();
+            return false;
+        }
+        
+        if (!date) {
+            alert('Please select an event date');
+            e.preventDefault();
+            return false;
+        }
+        
+        // Show loading state
+        const submitBtn = form.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Event...';
+        
+        console.log('Form validation passed, submitting...');
+    });
+});
+</script>
+    </main>
+    
+    <% if (locals.showNavbar !== false) { %>
+        <%- include('../components/footer') %>
+    <% } %>
+    
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+    
+    <script src="/js/main.js"></script>
+    <script src="/js/components.js"></script>
+    <script src="/js/notifications.js"></script>
+
+<style>
+.alert {
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.alert-error {
+    background: #fed7d7;
+    color: #c53030;
+    border-left: 4px solid #e53e3e;
+}
+
+.form-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.event-form {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.form-section {
+    margin-bottom: 30px;
+}
+
+.section-title {
+    color: #2d3748;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    color: #4a5568;
+    font-weight: 600;
+}
+
+.form-input, .form-textarea, .form-select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+}
+
+.form-input:focus, .form-textarea:focus, .form-select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.form-help {
+    display: block;
+    margin-top: 5px;
+    font-size: 14px;
+    color: #718096;
+}
+
+.form-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: #667eea;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #5a67d8;
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: #718096;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #4a5568;
+}
+</style>
+</body>
+</html>

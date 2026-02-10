@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/auth.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="auth-page">
+    <div class="auth-container">
+        <div class="auth-card register-card">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <i class="fas fa-code"></i>
+                    <h1>HackOverflow</h1>
+                </div>
+                <h2 class="auth-title">Create Account</h2>
+                <p class="auth-subtitle">Join the hackathon community</p>
+            </div>
+
+            <% if (error) { %>
+                <div class="alert alert-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <%= error %>
+                </div>
+            <% } %>
+
+            <form class="auth-form" action="/auth/register" method="POST">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="name" class="form-label">
+                            <i class="fas fa-user"></i>
+                            Full Name
+                        </label>
+                        <input 
+                            type="text" 
+                            id="name" 
+                            name="name" 
+                            class="form-input" 
+                            placeholder="Enter your full name"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email" class="form-label">
+                            <i class="fas fa-envelope"></i>
+                            Email Address
+                        </label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email" 
+                            class="form-input" 
+                            placeholder="Enter your email"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="role" class="form-label">
+                        <i class="fas fa-user-tag"></i>
+                        Role
+                    </label>
+                    <select id="role" name="role" class="form-select" required onchange="toggleRoleFields()">
+                        <option value="">Select your role</option>
+                        <option value="student">Student</option>
+                        <option value="club_lead">Club Lead</option>
+                        <option value="admin">Administrator</option>
+                    </select>
+                </div>
+
+                <!-- Student-specific fields -->
+                <div id="student-fields" class="role-fields" style="display: none;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="department" class="form-label">
+                                <i class="fas fa-graduation-cap"></i>
+                                Department
+                            </label>
+                            <input 
+                                type="text" 
+                                id="department" 
+                                name="department" 
+                                class="form-input" 
+                                placeholder="e.g., Computer Science"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="year" class="form-label">
+                                <i class="fas fa-calendar"></i>
+                                Year
+                            </label>
+                            <select id="year" name="year" class="form-select">
+                                <option value="">Select year</option>
+                                <option value="1st">1st Year</option>
+                                <option value="2nd">2nd Year</option>
+                                <option value="3rd">3rd Year</option>
+                                <option value="4th">4th Year</option>
+                                <option value="graduate">Graduate</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Club Lead specific fields -->
+                <div id="club-lead-fields" class="role-fields" style="display: none;">
+                    <div class="form-group">
+                        <label for="clubName" class="form-label">
+                            <i class="fas fa-users"></i>
+                            Club Name
+                        </label>
+                        <input 
+                            type="text" 
+                            id="clubName" 
+                            name="clubName" 
+                            class="form-input" 
+                            placeholder="Enter your club name"
+                        >
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">
+                        <i class="fas fa-lock"></i>
+                        Password
+                    </label>
+                    <div class="password-input-container">
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            class="form-input" 
+                            placeholder="Create a strong password"
+                            required
+                        >
+                        <button type="button" class="password-toggle" onclick="togglePassword('password')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="password-strength" id="password-strength"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword" class="form-label">
+                        <i class="fas fa-lock"></i>
+                        Confirm Password
+                    </label>
+                    <div class="password-input-container">
+                        <input 
+                            type="password" 
+                            id="confirmPassword" 
+                            name="confirmPassword" 
+                            class="form-input" 
+                            placeholder="Confirm your password"
+                            required
+                        >
+                        <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-options">
+                    <label class="checkbox-container">
+                        <input type="checkbox" name="terms" required>
+                        <span class="checkmark"></span>
+                        I agree to the <a href="/terms" target="_blank">Terms of Service</a> and <a href="/privacy" target="_blank">Privacy Policy</a>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-full">
+                    <i class="fas fa-user-plus"></i>
+                    Create Account
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <p>Already have an account? 
+                    <a href="/auth/login" class="auth-link">Sign in here</a>
+                </p>
+            </div>
+        </div>
+
+        <div class="auth-background">
+            <div class="bg-shape shape-1"></div>
+            <div class="bg-shape shape-2"></div>
+            <div class="bg-shape shape-3"></div>
+        </div>
+    </div>
+
+    <script src="/js/auth.js"></script>
+</body>
+</html>

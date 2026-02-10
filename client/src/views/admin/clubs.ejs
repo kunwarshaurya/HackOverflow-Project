@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/components.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <% if (locals.showNavbar !== false) { %>
+        <%- include('../components/navbar') %>
+    <% } %>
+    
+    <main class="main-content">
+        <div class="page-header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="header-text">
+                        <h1 class="page-title">
+                            <i class="fas fa-users-cog"></i>
+                            Club Management
+                        </h1>
+                        <p class="page-subtitle">Manage registered clubs and their administrators</p>
+                    </div>
+                    
+                    <div class="header-actions">
+                        <button class="btn btn-primary" onclick="toggleAddClubForm()">
+                            <i class="fas fa-plus"></i>
+                            Add Club
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <% if (error) { %>
+                <div class="alert alert-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <%= error %>
+                </div>
+            <% } %>
+            
+            <% if (success) { %>
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i>
+                    <%= success %>
+                </div>
+            <% } %>
+
+            <!-- Add Club Form -->
+            <div id="addClubForm" class="form-card" style="display: none;">
+                <h3>Register New Club</h3>
+                <form action="/admin/clubs" method="POST" class="club-form">
+                    <div class="form-group">
+                        <label for="name" class="form-label">Club Name *</label>
+                        <input type="text" id="name" name="name" class="form-input" required 
+                               placeholder="Enter club name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description" class="form-label">Description *</label>
+                        <textarea id="description" name="description" class="form-textarea" rows="4" required 
+                                  placeholder="Describe the club's purpose, activities, and goals"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="adminId" class="form-label">Club Administrator (Optional)</label>
+                        <input type="text" id="adminId" name="adminId" class="form-input" 
+                               placeholder="Admin User ObjectId (leave blank to assign later)">
+                        <small class="form-help">Enter a valid MongoDB ObjectId (24 characters) or leave blank. Example: 507f1f77bcf86cd799439011</small>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="toggleAddClubForm()">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus"></i>
+                            Register Club
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Clubs List -->
+            <div class="clubs-grid">
+                <% if (clubs && clubs.length > 0) { %>
+                    <% clubs.forEach(club => { %>
+                        <div class="club-card">
+                            <div class="club-header">
+                                <div class="club-info">
+                                    <h3 class="club-name"><%= club.name %></h3>
+                                    <div class="club-admin">
+                                        <i class="fas fa-user-tie"></i>
+                                        <span><%= club.admin?.name || 'No Admin Assigned' %></span>
+                                    </div>
+                                </div>
+                                
+                                <div class="club-status">
+                                    <span class="status-badge active">
+                                        <i class="fas fa-check-circle"></i>
+                                        Active
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="club-description">
+                                <p><%= club.description %></p>
+                            </div>
+                            
+                            <div class="club-stats">
+                                <div class="stat-item">
+                                    <span class="stat-label">Events Organized</span>
+                                    <span class="stat-value"><%= club.eventCount || 0 %></span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Members</span>
+                                    <span class="stat-value"><%= club.memberCount || 0 %></span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Joined</span>
+                                    <span class="stat-value"><%= new Date(club.createdAt).toLocaleDateString() %></span>
+                                </div>
+                            </div>
+                            
+                            <div class="club-actions">
+                                <button class="btn btn-sm btn-outline" onclick="editClub('<%= club._id %>')">
+                                    <i class="fas fa-edit"></i>
+                                    Edit
+                                </button>
+                                <button class="btn btn-sm btn-outline" onclick="viewClubEvents('<%= club._id %>')">
+                                    <i class="fas fa-calendar"></i>
+                                    Events
+                                </button>
+                                <button class="btn btn-sm btn-outline" onclick="manageMembers('<%= club._id %>')">
+                                    <i class="fas fa-users"></i>
+                                    Members
+                                </button>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="empty-state">
+                        <i class="fas fa-users-cog"></i>
+                        <h3>No Clubs Registered</h3>
+                        <p>Start by registering the first club to enable event organization.</p>
+                        <button class="btn btn-primary" onclick="toggleAddClubForm()">
+                            <i class="fas fa-plus"></i>
+                            Register First Club
+                        </button>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </main>
+    
+    <% if (locals.showNavbar !== false) { %>
+        <%- include('../components/footer') %>
+    <% } %>
+    
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+    
+    <script src="/js/main.js"></script>
+    <script src="/js/components.js"></script>
+    <script src="/js/notifications.js"></script>
+
+    <script>
+        function toggleAddClubForm() {
+            const form = document.getElementById('addClubForm');
+            const isVisible = form.style.display !== 'none';
+            
+            if (isVisible) {
+                form.style.display = 'none';
+                form.querySelector('form').reset();
+            } else {
+                form.style.display = 'block';
+                form.querySelector('#name').focus();
+            }
+        }
+
+        function editClub(clubId) {
+            alert('Edit functionality coming soon!');
+        }
+
+        function viewClubEvents(clubId) {
+            window.location.href = '/admin/clubs/' + clubId + '/events';
+        }
+
+        function manageMembers(clubId) {
+            // For now, show club member info
+            fetch('/admin/clubs/' + clubId + '/members')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const members = data.members || [];
+                        let memberList = members.length > 0 
+                            ? members.map(m => `• ${m.name || 'Unknown'} (${m.email || 'No email'})`).join('\n')
+                            : 'No members yet';
+                        alert(`Club Members:\n\n${memberList}\n\n${data.message || ''}`);
+                    } else {
+                        alert(`Member Info:\n\n${data.message || 'Member management functionality coming soon!'}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Unable to load member information at this time.');
+                });
+        }
+
+        // Auto-hide alerts after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.remove(), 300);
+                }, 5000);
+            });
+        });
+    </script>
+</body>
+</html>

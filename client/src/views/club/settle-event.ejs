@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/components.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <% if (locals.showNavbar !== false) { %>
+        <%- include('../components/navbar') %>
+    <% } %>
+    
+    <main class="main-content">
+<div class="page-header">
+    <div class="container">
+        <h1 class="page-title">
+            <i class="fas fa-receipt"></i>
+            Settle Event
+        </h1>
+        <p class="page-subtitle">Upload receipts and complete event settlement</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="settle-container">
+        <div class="event-summary-card">
+            <h2 class="event-name"><%= event.name %></h2>
+            
+            <div class="event-details">
+                <div class="detail-item">
+                    <i class="fas fa-calendar"></i>
+                    <span><%= new Date(event.date).toLocaleDateString() %></span>
+                </div>
+                <div class="detail-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span><%= event.venue?.name || 'TBA' %></span>
+                </div>
+                <div class="detail-item">
+                    <i class="fas fa-dollar-sign"></i>
+                    <span>Budget: ₹<%= event.budget?.toLocaleString() || 'N/A' %></span>
+                </div>
+                <div class="detail-item">
+                    <i class="fas fa-users"></i>
+                    <span><%= event.attendees?.length || 0 %> participants</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="settlement-form-card">
+            <h3>Upload Settlement Documents</h3>
+            <p class="form-description">
+                Please upload receipts, invoices, and any other financial documents related to this event.
+                This will help complete the budget settlement process.
+            </p>
+            
+            <form action="/club/events/<%= event._id %>/settle" method="POST" enctype="multipart/form-data" class="settlement-form">
+                <div class="form-group">
+                    <label for="receipt" class="form-label">Receipt/Proof Documents *</label>
+                    <div class="file-upload-area">
+                        <input type="file" id="receipt" name="receipt" class="file-input" 
+                               accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" required>
+                        <div class="file-upload-content">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Click to select files or drag and drop</p>
+                            <small>Supported formats: PDF, JPG, PNG, DOC, DOCX (Max 10MB)</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="actualExpense" class="form-label">Actual Expense (₹)</label>
+                    <input type="number" id="actualExpense" name="actualExpense" class="form-input" 
+                           placeholder="Enter actual amount spent" min="0" step="0.01">
+                    <small class="form-help">Leave blank if same as budgeted amount</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="notes" class="form-label">Settlement Notes</label>
+                    <textarea id="notes" name="notes" class="form-textarea" rows="4" 
+                              placeholder="Any additional notes about the event expenses or settlement"></textarea>
+                </div>
+                
+                <div class="settlement-checklist">
+                    <h4>Settlement Checklist</h4>
+                    <div class="checklist-items">
+                        <label class="checklist-item">
+                            <input type="checkbox" required>
+                            <span class="checkmark"></span>
+                            All receipts and invoices are included
+                        </label>
+                        <label class="checklist-item">
+                            <input type="checkbox" required>
+                            <span class="checkmark"></span>
+                            Expense amounts are accurate
+                        </label>
+                        <label class="checklist-item">
+                            <input type="checkbox" required>
+                            <span class="checkmark"></span>
+                            Event was conducted successfully
+                        </label>
+                        <label class="checklist-item">
+                            <input type="checkbox" required>
+                            <span class="checkmark"></span>
+                            Ready to submit for final approval
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <a href="/club/events" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i>
+                        Back to Events
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check"></i>
+                        Submit Settlement
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('receipt');
+    const uploadArea = document.querySelector('.file-upload-area');
+    const uploadContent = document.querySelector('.file-upload-content');
+    
+    // Handle file selection
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            uploadContent.innerHTML = \`
+                <i class="fas fa-file-check"></i>
+                <p>Selected: \${file.name}</p>
+                <small>Size: \${(file.size / 1024 / 1024).toFixed(2)} MB</small>
+            \`;
+            uploadArea.classList.add('file-selected');
+        }
+    });
+    
+    // Handle drag and drop
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        uploadArea.classList.add('drag-over');
+    });
+    
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('drag-over');
+    });
+    
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('drag-over');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            fileInput.dispatchEvent(new Event('change'));
+        }
+    });
+});
+</script>
+    </main>
+    
+    <% if (locals.showNavbar !== false) { %>
+        <%- include('../components/footer') %>
+    <% } %>
+    
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+    
+    <script src="/js/main.js"></script>
+    <script src="/js/components.js"></script>
+    <script src="/js/notifications.js"></script>
+</body>
+</html>

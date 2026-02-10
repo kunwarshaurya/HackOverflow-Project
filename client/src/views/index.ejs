@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/landing.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="landing-page">
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1 class="hero-title">
+                        Welcome to <span class="brand-highlight">HackOverflow</span>
+                    </h1>
+                    <p class="hero-subtitle">
+                        The ultimate platform for managing hackathon events, connecting clubs, and empowering students to participate in amazing tech events.
+                    </p>
+                    <div class="hero-buttons">
+                        <a href="/auth/register" class="btn btn-primary btn-large">
+                            <i class="fas fa-user-plus"></i>
+                            Get Started
+                        </a>
+                        <a href="/auth/login" class="btn btn-secondary btn-large">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Login
+                        </a>
+                    </div>
+                </div>
+                <div class="hero-image">
+                    <div class="hero-graphic">
+                        <i class="fas fa-code hero-icon"></i>
+                        <div class="floating-elements">
+                            <div class="float-element"><i class="fas fa-calendar"></i></div>
+                            <div class="float-element"><i class="fas fa-users"></i></div>
+                            <div class="float-element"><i class="fas fa-trophy"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <h2 class="section-title">Why Choose HackOverflow?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <h3 class="feature-title">Event Management</h3>
+                    <p class="feature-description">
+                        Create, manage, and track hackathon events with our comprehensive event management system.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 class="feature-title">Club Collaboration</h3>
+                    <p class="feature-description">
+                        Enable seamless collaboration between different clubs and organizations for co-hosted events.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3 class="feature-title">Analytics Dashboard</h3>
+                    <p class="feature-description">
+                        Get insights into event performance, budget tracking, and participation analytics.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h3 class="feature-title">Real-time Chat</h3>
+                    <p class="feature-description">
+                        Built-in chat system for event participants and club members to communicate effectively.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <h3 class="feature-title">Smart Notifications</h3>
+                    <p class="feature-description">
+                        Stay updated with intelligent notifications for event approvals, registrations, and updates.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3 class="feature-title">Role-based Access</h3>
+                    <p class="feature-description">
+                        Secure platform with role-based permissions for students, club leads, and administrators.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <div class="cta-content">
+                <h2 class="cta-title">Ready to Transform Your Hackathon Experience?</h2>
+                <p class="cta-description">
+                    Join thousands of students and clubs already using HackOverflow to create amazing tech events.
+                </p>
+                <div class="cta-buttons">
+                    <a href="/auth/register" class="btn btn-primary btn-large">
+                        <i class="fas fa-rocket"></i>
+                        Start Your Journey
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <%- include('components/footer') %>
+
+    <script src="/js/main.js"></script>
+    <script src="/js/landing.js"></script>
+</body>
+</html>

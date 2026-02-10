@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Event - HackOverflow</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; }
+        input, textarea, select { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px; font-size: 16px; }
+        input:focus, textarea:focus, select:focus { border-color: #007bff; outline: none; }
+        .btn { padding: 12px 24px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin: 5px; }
+        .btn:hover { background: #0056b3; }
+        .btn-secondary { background: #6c757d; }
+        .btn-secondary:hover { background: #545b62; }
+        .alert { padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+        .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .debug { background: #e7f3ff; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Create Event</h1>
+        
+        <% if (locals.error) { %>
+            <div class="alert alert-error">
+                ❌ <%= error %>
+            </div>
+        <% } %>
+        
+        <div class="debug">
+            <h3>🧪 Debug Info</h3>
+            <p><strong>User:</strong> <%= user.name %> (<%= user.role %>)</p>
+            <p><strong>Venues Available:</strong> <%= venues.length %></p>
+            <p><strong>Clubs Available:</strong> <%= clubs.length %></p>
+        </div>
+        
+        <!-- Test Form -->
+        <div style="background: #d4edda; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <h3>🧪 Test POST Route</h3>
+            <form action="/club/test-post" method="POST">
+                <input type="text" name="test" value="test-data" placeholder="Test data">
+                <button type="submit" class="btn" style="background: #28a745;">Test POST</button>
+            </form>
+        </div>
+        
+        <!-- Main Event Form -->
+        <form action="/club/create-event" method="POST">
+            <div class="form-group">
+                <label for="name">Event Name *</label>
+                <input type="text" id="name" name="name" required placeholder="Enter event name">
+            </div>
+            
+            <div class="form-group">
+                <label for="description">Description *</label>
+                <textarea id="description" name="description" rows="4" required placeholder="Describe your event"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="clubId">Organizing Club *</label>
+                <select id="clubId" name="clubId" required>
+                    <option value="">Select organizing club</option>
+                    <% clubs.forEach(club => { %>
+                        <option value="<%= club._id %>"><%= club.name %></option>
+                    <% }) %>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="venueId">Venue *</label>
+                <select id="venueId" name="venueId" required>
+                    <option value="">Select a venue</option>
+                    <% venues.forEach(venue => { %>
+                        <option value="<%= venue._id %>"><%= venue.name %> (Capacity: <%= venue.capacity %>)</option>
+                    <% }) %>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="date">Event Date *</label>
+                <input type="date" id="date" name="date" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="startTime">Start Time *</label>
+                <input type="time" id="startTime" name="startTime" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="endTime">End Time *</label>
+                <input type="time" id="endTime" name="endTime" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="budget">Budget (₹) *</label>
+                <input type="number" id="budget" name="budget" required placeholder="Enter budget amount" min="0">
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="/club/dashboard" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn">Create Event</button>
+            </div>
+        </form>
+    </div>
+    
+    <script>
+        // Set minimum date to today
+        document.getElementById('date').min = new Date().toISOString().split('T')[0];
+        
+        // Form submission logging
+        document.querySelector('form[action="/club/create-event"]').addEventListener('submit', function(e) {
+            console.log('=== FORM SUBMISSION ===');
+            const formData = new FormData(this);
+            for (let [key, value] of formData.entries()) {
+                console.log(key + ':', value);
+            }
+        });
+    </script>
+</body>
+</html>
