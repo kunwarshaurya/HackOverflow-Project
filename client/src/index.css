@@ -1,0 +1,128 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base styles */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+
+/* Component styles */
+@layer components {
+  /* Button styles */
+  .btn-primary {
+    @apply bg-orange-500 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 hover:bg-orange-600 hover:shadow-lg transform hover:-translate-y-0.5;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-200 text-gray-800 px-6 py-3 rounded-lg font-semibold transition-all duration-200 hover:bg-gray-300 hover:shadow-lg transform hover:-translate-y-0.5;
+  }
+
+  /* Card hover effects */
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-2;
+  }
+
+  /* Form focus styles */
+  .form-input {
+    @apply w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:outline-none transition-colors;
+  }
+
+  /* Loading spinner */
+  .spinner {
+    @apply border-4 border-gray-200 border-t-orange-500 rounded-full w-10 h-10 animate-spin;
+  }
+}
+
+/* Utility styles */
+@layer utilities {
+  /* Perspective utilities */
+  .perspective-1000 { 
+    perspective: 1000px; 
+  }
+
+  /* Custom rotation utilities */
+  .rotate-odd-even:nth-child(odd) { 
+    transform: rotate(2deg); 
+  }
+  
+  .rotate-odd-even:nth-child(even) { 
+    transform: rotate(-2deg); 
+  }
+  
+  .rotate-odd-even:hover { 
+    transform: rotate(0deg) scale(1.1) !important; 
+    z-index: 50; 
+  }
+
+  /* Gradient backgrounds */
+  .gradient-orange {
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  }
+
+  .gradient-blue {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  }
+
+  .gradient-green {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  }
+
+  .gradient-purple {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  }
+
+  /* Custom scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #f97316;
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #ea580c;
+  }
+}
+
+/* Global scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #f97316;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #ea580c;
+}
+
+/* Selection styles */
+::selection {
+  background-color: #f97316;
+  color: white;
+}
+
+/* Focus styles for accessibility */
+*:focus-visible {
+  outline: 2px solid #f97316;
+  outline-offset: 2px;
+}
