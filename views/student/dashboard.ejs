@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/partials.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+   <%- include('../partials/navbar') %>
+    
+    <main class="main-content">
+        <div class="container">
+            <!-- Welcome Section -->
+            <div class="welcome-section">
+                <div class="welcome-content">
+                    <h1>Welcome back, <%= user.name %>! 👋</h1>
+                    <p>Discover amazing hackathon events and connect with the tech community.</p>
+                </div>
+                <div class="welcome-actions">
+                    <a href="/student/discover" class="btn btn-primary">
+                        <i class="fas fa-search"></i>
+                        Discover Events
+                    </a>
+                    <a href="/student/tickets" class="btn btn-secondary">
+                        <i class="fas fa-ticket-alt"></i>
+                        My Tickets
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Upcoming Events -->
+            <div class="section">
+                <div class="section-header">
+                    <h2><i class="fas fa-calendar-alt"></i> Upcoming Events</h2>
+                    <a href="/student/discover" class="btn btn-secondary btn-small">View All</a>
+                </div>
+                
+                <% if (events.length > 0) { %>
+                    <div class="events-grid">
+                        <% events.forEach(event => { %>
+                            <div class="event-card">
+                                <div class="event-header">
+                                    <div class="event-date">
+                                        <span class="day"><%= new Date(event.date).getDate() %></span>
+                                        <span class="month"><%= new Date(event.date).toLocaleDateString('en-US', { month: 'short' }) %></span>
+                                    </div>
+                                    <div class="event-status">
+                                        <span class="badge badge-<%= event.status === 'approved' ? 'success' : 'warning' %>">
+                                            <%= event.status.toUpperCase() %>
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div class="event-content">
+                                    <h3 class="event-title"><%= event.name %></h3>
+                                    <p class="event-description"><%= event.description.substring(0, 100) %>...</p>
+                                    
+                                    <div class="event-meta">
+                                        <div class="meta-item">
+                                            <i class="fas fa-clock"></i>
+                                            <%= event.startTime %> - <%= event.endTime %>
+                                        </div>
+                                        <div class="meta-item">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                            <%= event.venue?.name || 'TBA' %>
+                                        </div>
+                                        <div class="meta-item">
+                                            <i class="fas fa-users"></i>
+                                            <%= event.club?.name || 'Independent' %>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="event-footer">
+                                    <div class="event-budget">
+                                        <i class="fas fa-rupee-sign"></i>
+                                        ₹<%= event.budget.toLocaleString() %>
+                                    </div>
+                                    <div class="event-actions">
+                                        <a href="/student/events/<%= event._id %>" class="btn btn-primary btn-small">
+                                            <i class="fas fa-eye"></i>
+                                            View Details
+                                        </a>
+                                       <%
+                                            const isRegistered = event.attendees.some(a => a.toString() === user._id.toString());
+                                            const isFull = event.attendees.length >= event.capacity;
+                                        %>
+
+                                            <% if (isRegistered) { %>
+                                                <button class="btn btn-secondary btn-small" disabled>
+                                                 <i class="fas fa-check"></i>
+                                                Registered
+                                                 </button>
+                                            <% } else if (isFull) { %>
+                                            <button class="btn btn-danger btn-small" disabled>
+                                            <i class="fas fa-ban"></i>
+                                            Full
+                                             </button>
+                                            <% } else { %>
+                                                    <form action="/student/events/<%= event._id %>/register" method="POST" style="display:inline;">
+                                                     <button type="submit" class="btn btn-success btn-small">
+                                                    <i class="fas fa-user-plus"></i>
+                                                    Register
+                                                        </button>
+                                                    </form>
+                                            <% } %>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
+                <% } else { %>
+                    <div class="empty-state">
+                        <i class="fas fa-calendar-times"></i>
+                        <h3>No upcoming events</h3>
+                        <p>Check back later for exciting hackathon events!</p>
+                        <a href="/student/discover" class="btn btn-primary">
+                            <i class="fas fa-search"></i>
+                            Explore Events
+                        </a>
+                    </div>
+                <% } %>
+            </div>
+            
+            <!-- Active Clubs -->
+            <div class="section">
+                <div class="section-header">
+                    <h2><i class="fas fa-users"></i> Active Clubs</h2>
+                </div>
+                
+                <% if (clubs.length > 0) { %>
+                    <div class="clubs-grid">
+                        <% clubs.slice(0, 6).forEach(club => { %>
+                            <div class="club-card">
+                                <div class="club-avatar">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="club-info">
+                                    <h4 class="club-name"><%= club.name %></h4>
+                                    <p class="club-description"><%= club.description || 'No description available' %></p>
+                                    <div class="club-stats">
+                                        <span class="stat">
+                                            <i class="fas fa-user"></i>
+                                            <%= club.members?.length || 0 %> members
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="club-actions">
+                                    <button class="btn btn-secondary btn-small">
+                                        <i class="fas fa-eye"></i>
+                                        View
+                                    </button>
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
+                <% } else { %>
+                    <div class="empty-state">
+                        <i class="fas fa-users-slash"></i>
+                        <h3>No clubs available</h3>
+                        <p>Clubs will appear here once they are created.</p>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </main>
+    
+ <%- include('../partials/footer') %>
+    
+    <div id="toast-container" class="toast-container"></div>
+    
+    <script src="/js/main.js"></script>
+    <script src="/js/components.js"></script>
+    <script src="/js/notifications.js"></script>
+</body>
+</html>
+
+<style>
+.welcome-section {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: var(--white);
+    padding: var(--spacing-12);
+    border-radius: var(--radius-2xl);
+    margin-bottom: var(--spacing-8);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-6);
+}
+
+.welcome-content h1 {
+    font-size: var(--font-size-3xl);
+    margin-bottom: var(--spacing-2);
+    color: var(--white);
+}
+
+.welcome-content p {
+    font-size: var(--font-size-lg);
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+}
+
+.welcome-actions {
+    display: flex;
+    gap: var(--spacing-3);
+    flex-wrap: wrap;
+}
+
+.section {
+    margin-bottom: var(--spacing-12);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-6);
+}
+
+.section-header h2 {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    margin: 0;
+}
+
+.events-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: var(--spacing-6);
+}
+
+.event-card {
+    background-color: var(--white);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-200);
+    overflow: hidden;
+    transition: all var(--transition-normal);
+}
+
+.event-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+.event-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: var(--spacing-6) var(--spacing-6) 0;
+}
+
+.event-date {
+    background-color: var(--primary-color);
+    color: var(--white);
+    padding: var(--spacing-3);
+    border-radius: var(--radius-lg);
+    text-align: center;
+    min-width: 60px;
+}
+
+.event-date .day {
+    display: block;
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    line-height: 1;
+}
+
+.event-date .month {
+    display: block;
+    font-size: var(--font-size-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.event-content {
+    padding: var(--spacing-4) var(--spacing-6);
+}
+
+.event-title {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    margin-bottom: var(--spacing-2);
+    color: var(--gray-900);
+}
+
+.event-description {
+    color: var(--gray-600);
+    margin-bottom: var(--spacing-4);
+    line-height: 1.5;
+}
+
+.event-meta {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    font-size: var(--font-size-sm);
+    color: var(--gray-500);
+}
+
+.meta-item i {
+    width: 16px;
+    color: var(--primary-color);
+}
+
+.event-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-4) var(--spacing-6) var(--spacing-6);
+    border-top: 1px solid var(--gray-100);
+}
+
+.event-budget {
+    font-weight: 600;
+    color: var(--success-color);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-1);
+}
+
+.clubs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--spacing-4);
+}
+
+.club-card {
+    background-color: var(--white);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-6);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-200);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-4);
+    transition: all var(--transition-normal);
+}
+
+.club-card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.club-avatar {
+    width: 60px;
+    height: 60px;
+    background-color: var(--primary-color);
+    color: var(--white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-xl);
+    flex-shrink: 0;
+}
+
+.club-info {
+    flex: 1;
+}
+
+.club-name {
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    margin-bottom: var(--spacing-1);
+    color: var(--gray-900);
+}
+
+.club-description {
+    font-size: var(--font-size-sm);
+    color: var(--gray-600);
+    margin-bottom: var(--spacing-2);
+    line-height: 1.4;
+}
+
+.club-stats .stat {
+    font-size: var(--font-size-xs);
+    color: var(--gray-500);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-1);
+}
+
+.empty-state {
+    text-align: center;
+    padding: var(--spacing-16);
+    color: var(--gray-500);
+}
+
+.empty-state i {
+    font-size: var(--font-size-4xl);
+    margin-bottom: var(--spacing-4);
+    color: var(--gray-400);
+}
+
+.empty-state h3 {
+    color: var(--gray-600);
+    margin-bottom: var(--spacing-2);
+}
+
+@media (max-width: 768px) {
+    .welcome-section {
+        flex-direction: column;
+        text-align: center;
+        padding: var(--spacing-8);
+    }
+    
+    .welcome-actions {
+        justify-content: center;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-3);
+    }
+    
+    .events-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .clubs-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .club-card {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+</style>

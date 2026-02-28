@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/partials.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <% if (locals.showNavbar !== false) { %>
+        <%- include('../partials/navbar') %>
+    <% } %>
+    
+    <main class="main-content">
+<div class="page-header">
+    <div class="container">
+        <h1 class="page-title">
+            <i class="fas fa-clipboard-check"></i>
+            Event Approvals
+        </h1>
+        <p class="page-subtitle">Review and approve pending event requests</p>
+    </div>
+</div>
+
+<div class="container">
+    <% if (events && events.length > 0) { %>
+        <div class="approvals-list">
+            <% events.forEach(event => { %>
+                <div class="approval-card">
+                    <div class="approval-header">
+                        <div class="event-info">
+                            <h3 class="event-title"><%= event.name %></h3>
+                            <div class="event-meta">
+                                <span class="meta-item">
+                                    <i class="fas fa-users"></i>
+                                    <%= event.club?.name || 'Unknown Club' %>
+                                </span>
+                                <span class="meta-item">
+                                    <i class="fas fa-calendar"></i>
+                                    <%= new Date(event.date).toLocaleDateString() %>
+                                </span>
+                                <span class="meta-item">
+                                    <i class="fas fa-clock"></i>
+                                    <%= event.startTime %> - <%= event.endTime %>
+                                </span>
+                            </div>
+                        </div>
+                        <span class="status-badge pending">
+                            <i class="fas fa-clock"></i>
+                            Pending Review
+                        </span>
+                    </div>
+                    
+                    <div class="approval-content">
+    <div class="event-details">
+
+        <div class="detail-section">
+            <h4>Event Description</h4>
+            <p><%= event.description || 'No description provided.' %></p>
+        </div>
+        
+        <div class="detail-grid">
+
+            <div class="detail-item">
+                <strong>Club:</strong>
+                <span>
+                    <%= event.club && event.club.name 
+                        ? event.club.name 
+                        : 'N/A' %>
+                </span>
+            </div>
+
+            <div class="detail-item">
+                <strong>Venue:</strong>
+                <span>
+                    <%= event.venue && event.venue.name 
+                        ? event.venue.name 
+                        : 'N/A' %>
+                </span>
+            </div>
+
+            <div class="detail-item">
+                <strong>Budget:</strong>
+                <span>
+                    ₹<%= event.budget 
+                        ? event.budget.toLocaleString() 
+                        : 'N/A' %>
+                </span>
+            </div>
+
+            <div class="detail-item">
+                <strong>Organizer:</strong>
+                <span>
+                    <%= event.organizer && event.organizer.name 
+                        ? event.organizer.name 
+                        : 'N/A' %>
+                </span>
+            </div>
+
+            <div class="detail-item">
+                <strong>Submitted:</strong>
+                <span>
+                    <%= event.createdAt 
+                        ? new Date(event.createdAt).toLocaleDateString() 
+                        : 'N/A' %>
+                </span>
+            </div>
+
+        </div>
+
+        <% if (event.collaborators && event.collaborators.length > 0) { %>
+            <div class="detail-section">
+                <h4>Collaborating Clubs</h4>
+                <div class="collaborators-list">
+
+                    <% event.collaborators.forEach(collab => { %>
+                        <span class="collaborator-tag">
+                            <i class="fas fa-handshake"></i>
+                            <%= collab.club && collab.club.name 
+                                ? collab.club.name 
+                                : 'Unknown Club' %>
+                        </span>
+                    <% }) %>
+
+                </div>
+            </div>
+        <% } %>
+
+    </div>
+</div>
+                        
+                        <div class="approval-actions">
+                            <form action="/admin/events/<%= event._id %>/status" method="POST" class="approval-form">
+                                <div class="form-group">
+                                    <label for="comments-<%= event._id %>" class="form-label">Admin Comments</label>
+                                    <textarea id="comments-<%= event._id %>" name="comments" class="form-textarea" rows="3" 
+                                              placeholder="Add any comments or feedback for the organizers"></textarea>
+                                </div>
+                                
+                                <div class="action-buttons">
+                                    <button type="submit" name="status" value="rejected" class="btn btn-danger">
+                                        <i class="fas fa-times"></i>
+                                        Reject
+                                    </button>
+                                    <button type="submit" name="status" value="approved" class="btn btn-success">
+                                        <i class="fas fa-check"></i>
+                                        Approve
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+    <% } else { %>
+        <div class="empty-state">
+            <i class="fas fa-clipboard-check"></i>
+            <h3>No Pending Approvals</h3>
+            <p>All event requests have been reviewed. Great job!</p>
+            <a href="/admin/dashboard" class="btn btn-primary">
+                <i class="fas fa-tachometer-alt"></i>
+                Back to Dashboard
+            </a>
+        </div>
+    <% } %>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const approvalForms = document.querySelectorAll('.approval-form');
+    
+    approvalForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const status = e.submitter.value;
+            const eventName = form.closest('.approval-card')
+                                  .querySelector('.event-title')
+                                  .textContent;
+            
+            const action = status === 'approved' ? 'approve' : 'reject';
+            const message = `Are you sure you want to ${action} the event "${eventName}"?`;
+            
+            if (!confirm(message)) {
+                e.preventDefault();
+            }
+        });
+    });
+});
+</script>

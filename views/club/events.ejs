@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/partials.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <% if (locals.showNavbar !== false) { %>
+        <%- include('../partials/navbar') %>
+    <% } %>
+    
+    <main class="main-content">
+<div class="page-header">
+    <div class="container">
+        <div class="header-content">
+            <div class="header-text">
+                <h1 class="page-title">
+                    <i class="fas fa-calendar-alt"></i>
+                    <%= isHistory ? 'Event History' : 'My Events' %>
+                </h1>
+                <p class="page-subtitle">
+                    <%= isHistory ? 'Past events organized by your club' : 'Manage your upcoming events' %>
+                </p>
+            </div>
+            
+            <div class="header-actions">
+                <% if (!isHistory) { %>
+                    <a href="/club/events/create" class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Create Event
+                    </a>
+                <% } %>
+                
+                <div class="view-toggle">
+                    <a href="/club/events" class="btn <%= !isHistory ? 'btn-primary' : 'btn-outline' %>">
+                        Upcoming
+                    </a>
+                    <a href="/club/events?history=true" class="btn <%= isHistory ? 'btn-primary' : 'btn-outline' %>">
+                        History
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <% if (events && events.length > 0) { %>
+        <div class="events-list">
+            <% events.forEach(event => { %>
+                <div class="event-card club-event">
+                    <div class="event-header">
+                        <div class="event-title-section">
+                            <h3 class="event-title">
+                                <a href="/events/<%= event._id %>"><%= event.name %></a>
+                            </h3>
+                            <span class="event-status status-<%= event.status %>">
+                                <%= event.status.charAt(0).toUpperCase() + event.status.slice(1) %>
+                            </span>
+                        </div>
+                        
+                        <div class="event-actions">
+                            <% if (event.status === 'pending') { %>
+                                <span class="status-badge pending">
+                                    <i class="fas fa-clock"></i>
+                                    Awaiting Approval
+                                </span>
+                            <% } else if (event.status === 'approved' && !isHistory) { %>
+                                <a href="/club/events/<%= event._id %>/settle" class="btn btn-sm btn-outline">
+                                    <i class="fas fa-receipt"></i>
+                                    Settle
+                                </a>
+                            <% } else if (event.status === 'completed') { %>
+                                <span class="status-badge completed">
+                                    <i class="fas fa-check-circle"></i>
+                                    Completed
+                                </span>
+                            <% } %>
+                        </div>
+                    </div>
+                    
+                    <div class="event-meta">
+                        <div class="meta-row">
+                            <div class="meta-item">
+                                <i class="fas fa-calendar"></i>
+                                <span><%= new Date(event.date).toLocaleDateString() %></span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-clock"></i>
+                                <span><%= event.startTime %> - <%= event.endTime %></span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span><%= event.venue?.name || 'TBA' %></span>
+                            </div>
+                        </div>
+                        
+                        <div class="meta-row">
+                            <div class="meta-item">
+                                <i class="fas fa-users"></i>
+                                <span><%= event.attendees?.length || 0 %> registered</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-dollar-sign"></i>
+                                <span>₹<%= event.budget?.toLocaleString() || 'N/A' %></span>
+                            </div>
+                            <% if (event.collaborators && event.collaborators.length > 0) { %>
+                                <div class="meta-item">
+                                    <i class="fas fa-handshake"></i>
+                                    <span><%= event.collaborators.length %> collaborator(s)</span>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                    
+                    <p class="event-description">
+                        <%= event.description.substring(0, 200) %><%= event.description.length > 200 ? '...' : '' %>
+                    </p>
+                    
+                    <div class="event-footer">
+                        <div class="event-links">
+                            <a href="/events/<%= event._id %>" class="btn btn-sm btn-outline">
+                                <i class="fas fa-eye"></i>
+                                View Details
+                            </a>
+                            
+                            <% if (event.status === 'approved') { %>
+                                <a href="/chat/event/<%= event._id %>" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-comments"></i>
+                                    Event Chat
+                                </a>
+                            <% } %>
+                        </div>
+                        
+                        <% if (event.adminComments) { %>
+                            <div class="admin-comments">
+                                <strong>Admin Comments:</strong>
+                                <p><%= event.adminComments %></p>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+    <% } else { %>
+        <div class="empty-state">
+            <i class="fas fa-calendar-times"></i>
+            <h3><%= isHistory ? 'No Past Events' : 'No Events Yet' %></h3>
+            <p>
+                <%= isHistory ? 'You haven\'t organized any events yet.' : 'Start by creating your first event!' %>
+            </p>
+            <% if (!isHistory) { %>
+                <a href="/club/events/create" class="btn btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Create Your First Event
+                </a>
+            <% } %>
+        </div>
+    <% } %>
+</div>
+    </main>
+    
+    <% if (locals.showNavbar !== false) { %>
+        <%- include('../partials/footer') %>
+    <% } %>
+    
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+    
+    <script src="/js/main.js"></script>
+    <script src="/js/partials.js"></script>
+    <script src="/js/notifications.js"></script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= title %>
+    </title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/partials.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <% if (locals.showNavbar !==false) { %>
+        <%- include('../partials/navbar') %>
+            <% } %>
+
+                <main class="main-content">
+                    <div class="page-header">
+                        <div class="container">
+                            <h1 class="page-title">
+                                <i class="fas fa-compass"></i>
+                                Discover Events
+                            </h1>
+                            <p class="page-subtitle">Find and register for exciting hackathon events</p>
+                        </div>
+                    </div>
+
+                    <div class="container">
+                        <div class="events-grid">
+                            <% if (events && events.length> 0) { %>
+                                <% events.forEach(event=> { %>
+                                    <div class="event-card">
+                                        <div class="event-header">
+                                            <h3 class="event-title">
+                                                <a href="/events/<%= event._id %>">
+                                                    <%= event.name %>
+                                                </a>
+                                            </h3>
+                                            <span class="event-status status-<%= event.status %>">
+                                                <%= event.status.charAt(0).toUpperCase() + event.status.slice(1) %>
+                                            </span>
+                                        </div>
+
+                                        <div class="event-meta">
+                                            <div class="meta-item">
+                                                <i class="fas fa-calendar"></i>
+                                                <span>
+                                                    <%= new Date(event.date).toLocaleDateString() %>
+                                                </span>
+                                            </div>
+                                            <div class="meta-item">
+                                                <i class="fas fa-clock"></i>
+                                                <span>
+                                                    <%= event.startTime %> - <%= event.endTime %>
+                                                </span>
+                                            </div>
+                                            <div class="meta-item">
+                                                <i class="fas fa-map-marker-alt"></i>
+                                                <span>
+                                                    <%= event.venue?.name || 'TBA' %>
+                                                </span>
+                                            </div>
+                                            <div class="meta-item">
+                                                <i class="fas fa-users"></i>
+                                                <span>
+                                                    <%= event.club?.name || 'Unknown Club' %>
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <p class="event-description">
+                                            <%= event.description.substring(0, 150) %>
+                                                <%= event.description.length> 150 ? '...' : '' %>
+                                        </p>
+
+                                        <div class="event-footer">
+                                            <div class="attendee-count">
+                                                <i class="fas fa-user-friends"></i>
+                                                <span>
+                                                    <%= event.attendees?.length || 0 %> registered
+                                                </span>
+                                            </div>
+                                            <a href="/student/events/<%= event._id %>" class="btn btn-primary btn-sm">
+                                                View Details
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <% }) %>
+                                        <% } else { %>
+                                            <div class="empty-state">
+                                                <i class="fas fa-calendar-times"></i>
+                                                <h3>No Events Available</h3>
+                                                <p>There are currently no events to discover. Check back later!</p>
+                                            </div>
+                                            <% } %>
+                        </div>
+                    </div>
+                </main>
+
+                <% if (locals.showNavbar !==false) { %>
+                    <%- include('../partials/footer') %>
+                        <% } %>
+
+                            <!-- Toast Notifications -->
+                            <div id="toast-container" class="toast-container"></div>
+
+                            <script src="/js/main.js"></script>
+                            <script src="/js/partials.js"></script>
+                            <script src="/js/notifications.js"></script>
+</body>
+
+</html>

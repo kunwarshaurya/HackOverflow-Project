@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/partials.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <% if (locals.showNavbar !== false) { %>
+        <%- include('partials/navbar') %>
+    <% } %>
+    
+    <main class="main-content">
+        <%- body %>
+    </main>
+    
+    <% if (locals.showNavbar !== false) { %>
+        <%- include('partials/footer') %>
+    <% } %>
+    
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+    
+    <script src="/js/main.js"></script>
+    <script src="/js/components.js"></script>
+    <script src="/js/notifications.js"></script>
+</body>
+</html>

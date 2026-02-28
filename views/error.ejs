@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/partials.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="error-page">
+    <div class="error-container">
+        <div class="error-content">
+            <div class="error-icon">
+                <% if (statusCode === 404) { %>
+                    <i class="fas fa-search"></i>
+                <% } else if (statusCode === 403) { %>
+                    <i class="fas fa-lock"></i>
+                <% } else if (statusCode === 500) { %>
+                    <i class="fas fa-exclamation-triangle"></i>
+                <% } else { %>
+                    <i class="fas fa-exclamation-circle"></i>
+                <% } %>
+            </div>
+            
+            <h1 class="error-title">
+                <% if (statusCode === 404) { %>
+                    Page Not Found
+                <% } else if (statusCode === 403) { %>
+                    Access Denied
+                <% } else if (statusCode === 500) { %>
+                    Server Error
+                <% } else { %>
+                    Oops! Something went wrong
+                <% } %>
+            </h1>
+            
+            <p class="error-message">
+                <%= error %>
+            </p>
+            
+            <div class="error-actions">
+                <a href="/" class="btn btn-primary">
+                    <i class="fas fa-home"></i>
+                    Go Home
+                </a>
+                
+                <button onclick="history.back()" class="btn btn-outline">
+                    <i class="fas fa-arrow-left"></i>
+                    Go Back
+                </button>
+            </div>
+            
+            <% if (statusCode === 404) { %>
+                <div class="error-suggestions">
+                    <h3>What you can do:</h3>
+                    <ul>
+                        <li>Check the URL for typos</li>
+                        <li>Go back to the previous page</li>
+                        <li>Visit our <a href="/">homepage</a></li>
+                        <li>Use the navigation menu above</li>
+                    </ul>
+                </div>
+            <% } else if (statusCode === 500) { %>
+                <div class="error-suggestions">
+                    <h3>What happened:</h3>
+                    <ul>
+                        <li>There was an internal server error</li>
+                        <li>Our team has been notified</li>
+                        <li>Please try again in a few minutes</li>
+                        <li>If the problem persists, contact support</li>
+                    </ul>
+                </div>
+            <% } %>
+        </div>
+        
+        <div class="error-footer">
+            <p>&copy; 2024 HackOverflow. All rights reserved.</p>
+        </div>
+    </div>
+    
+    <script src="/js/main.js"></script>
+</body>
+</html>
