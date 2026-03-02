@@ -10,6 +10,31 @@
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/partials.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .capacity-mini-wrap {
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 0.4rem
+        }
+
+        .capacity-mini-bar {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s ease
+        }
+
+        .capacity-mini-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: #718096;
+            margin-top: 0.2rem
+        }
+    </style>
 </head>
 
 <body>
@@ -54,7 +79,7 @@
                                             <div class="meta-item">
                                                 <i class="fas fa-clock"></i>
                                                 <span>
-                                                    <%= event.startTime %> - <%= event.endTime %>
+                                                    <%= event.startTimeFormatted %> - <%= event.endTimeFormatted %>
                                                 </span>
                                             </div>
                                             <div class="meta-item">
@@ -80,13 +105,39 @@
                                             <div class="attendee-count">
                                                 <i class="fas fa-user-friends"></i>
                                                 <span>
-                                                    <%= event.attendees?.length || 0 %> registered
+                                                    <%= event.attendees?.length || 0 %> / <%= event.capacity || '∞' %>
+                                                            registered
                                                 </span>
                                             </div>
                                             <a href="/student/events/<%= event._id %>" class="btn btn-primary btn-sm">
                                                 View Details
                                             </a>
                                         </div>
+                                        <% if (event.capacity) { %>
+                                            <% const reg=event.attendees ? event.attendees.length : 0; const
+                                                cap=event.capacity; const pct=Math.min(Math.round((reg / cap) * 100),
+                                                100); const full=reg>= cap;
+                                                const almost = pct >= 80 && !full;
+                                                const clr = full ? '#e53e3e' : almost ? '#dd6b20' : '#38a169';
+                                                %>
+                                                <div class="capacity-mini-wrap">
+                                                    <div class="capacity-mini-bar"
+                                                        style="width:<%= pct %>%;background:<%= clr %>;"></div>
+                                                </div>
+                                                <div class="capacity-mini-info">
+                                                    <span>
+                                                        <%= pct %>% filled
+                                                    </span>
+                                                    <% if (full) { %><span style="color:#e53e3e;font-weight:600"><i
+                                                                class="fas fa-ban"></i> Fully Booked</span>
+                                                        <% } %>
+                                                            <% if (almost) { %><span
+                                                                    style="color:#dd6b20;font-weight:600"><i
+                                                                        class="fas fa-exclamation-triangle"></i> Filling
+                                                                    Fast</span>
+                                                                <% } %>
+                                                </div>
+                                                <% } %>
                                     </div>
                                     <% }) %>
                                         <% } else { %>

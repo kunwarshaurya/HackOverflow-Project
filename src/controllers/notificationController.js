@@ -4,9 +4,16 @@ exports.getMyNotifications = async (req, res) => {
   try {
     const notifications = await Notification.find({ recipient: req.user.id })
       .sort({ createdAt: -1 });
-    res.render('notifications/index', { title: 'Notifications', notifications, user: req.user });
+
+    const unreadCount = notifications.filter(n => !n.isRead).length;
+
+    res.render('notifications/index', {
+      title: 'Notifications',
+      notifications,
+      unreadCount,
+      user: req.user
+    });
   } catch (error) {
-    console.error('Error fetching notifications:', error.message);
     res.redirect('/dashboard');
   }
 };
@@ -16,12 +23,12 @@ exports.markAsRead = async (req, res) => {
     const notification = await Notification.findById(req.params.id);
 
     if (!notification) {
-      return res.redirect('/notifications'); // Item not found
+      return res.redirect('/notifications');
     }
 
     // Security Check: Ensure only the recipient can mark it read
     if (notification.recipient.toString() !== req.user.id) {
-      return res.redirect('/notifications'); // Not authorized
+      return res.redirect('/notifications');
     }
 
     notification.isRead = true;
@@ -29,7 +36,18 @@ exports.markAsRead = async (req, res) => {
 
     res.redirect('/notifications');
   } catch (error) {
-    console.error('Error marking notification read:', error.message);
+    res.redirect('/notifications');
+  }
+};
+
+exports.markAllAsRead = async (req, res) => {
+  try {
+    await Notification.updateMany(
+      { recipient: req.user.id, isRead: false },
+      { $set: { isRead: true } }
+    );
+    res.redirect('/notifications');
+  } catch (error) {
     res.redirect('/notifications');
   }
 };

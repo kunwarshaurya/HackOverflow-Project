@@ -3,7 +3,8 @@ const router = express.Router();
 
 const {
   getMyNotifications,
-  markAsRead
+  markAsRead,
+  markAllAsRead
 } = require('../controllers/notificationController');
 
 const { isAuthenticated } = require('../middlewares/authMiddleware');
@@ -15,11 +16,18 @@ router.get(
   getMyNotifications
 );
 
-// Mark notification as read
-router.put(
+// Mark single notification as read
+router.post(
   '/:id/read',
   isAuthenticated,
   markAsRead
+);
+
+// Mark all notifications as read
+router.post(
+  '/mark-all-read',
+  isAuthenticated,
+  markAllAsRead
 );
 
 module.exports = router;

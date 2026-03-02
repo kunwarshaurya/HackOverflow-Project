@@ -1,0 +1,319 @@
+<%# Event Intelligence Partial Usage: <%- include('../partials/event-intelligence', { event: event }) %>
+    Renders: lifecycle timeline, capacity bar, reminder badge
+    %>
+
+    <% if (typeof event !=='undefined' && event) { %>
+
+        <!-- ============ Lifecycle Timeline ============ -->
+        <div class="intel-card">
+            <h4 class="intel-title"><i class="fas fa-stream"></i> Event Lifecycle</h4>
+            <div class="lifecycle-timeline">
+                <% const steps=['pending', 'approved' , 'completed' ]; const labels={ pending: 'Pending' ,
+                    approved: 'Approved' , completed: 'Completed' }; const icons={ pending: 'fa-clock' ,
+                    approved: 'fa-check-circle' , completed: 'fa-flag-checkered' }; const
+                    currentIdx=steps.indexOf(event.status); const isRejected=event.status==='rejected' ; %>
+                    <% if (isRejected) { %>
+                        <div class="lifecycle-step rejected active">
+                            <div class="lifecycle-dot"><i class="fas fa-times-circle"></i></div>
+                            <span class="lifecycle-label">Rejected</span>
+                        </div>
+                        <% } else { %>
+                            <% steps.forEach((step, idx)=> { %>
+                                <% const isActive=idx===currentIdx; const isDone=idx < currentIdx; const cls=isActive
+                                    ? 'active' : isDone ? 'done' : 'upcoming' ; %>
+                                    <div class="lifecycle-step <%= cls %>">
+                                        <div class="lifecycle-dot">
+                                            <i class="fas <%= isDone ? 'fa-check' : icons[step] %>"></i>
+                                        </div>
+                                        <span class="lifecycle-label">
+                                            <%= labels[step] %>
+                                        </span>
+                                    </div>
+                                    <% if (idx < steps.length - 1) { %>
+                                        <div class="lifecycle-connector <%= isDone ? 'done' : '' %>"></div>
+                                        <% } %>
+                                            <% }) %>
+                                                <% } %>
+            </div>
+
+            <% if (event.status==='completed' ) { %>
+                <div class="intel-badge auto-complete">
+                    <i class="fas fa-robot"></i>
+                    Automatically completed by system
+                </div>
+                <% } %>
+        </div>
+
+        <!-- ============ Capacity Progress ============ -->
+        <% if (event.capacity) { %>
+            <% const registered=event.attendees ? event.attendees.length : 0; const cap=event.capacity; const
+                pct=Math.min(Math.round((registered / cap) * 100), 100); const isFull=registered>= cap;
+                const isAlmostFull = pct >= 80 && !isFull;
+                const barColor = isFull ? '#e53e3e' : isAlmostFull ? '#dd6b20' : '#38a169';
+                %>
+                <div class="intel-card">
+                    <h4 class="intel-title"><i class="fas fa-users"></i> Capacity</h4>
+                    <div class="capacity-info">
+                        <span class="capacity-count">
+                            <%= registered %> / <%= cap %>
+                        </span>
+                        <% if (isFull) { %>
+                            <span class="capacity-badge full"><i class="fas fa-ban"></i> Fully Booked</span>
+                            <% } else if (isAlmostFull) { %>
+                                <span class="capacity-badge warning"><i class="fas fa-exclamation-triangle"></i> Filling
+                                    Fast</span>
+                                <% } else { %>
+                                    <span class="capacity-badge open"><i class="fas fa-door-open"></i> Spots
+                                        Available</span>
+                                    <% } %>
+                    </div>
+                    <div class="capacity-bar-wrap">
+                        <div class="capacity-bar" style="width: <%= pct %>%; background: <%= barColor %>;"></div>
+                    </div>
+                    <span class="capacity-pct">
+                        <%= pct %>% filled
+                    </span>
+                </div>
+                <% } %>
+
+                    <!-- ============ Reminder Status ============ -->
+                    <div class="intel-card">
+                        <h4 class="intel-title"><i class="fas fa-bell"></i> Reminder Status</h4>
+                        <% if (event.reminderSent) { %>
+                            <div class="intel-badge reminder-sent">
+                                <i class="fas fa-check-circle"></i>
+                                Reminder Sent to Participants
+                            </div>
+                            <% } else if (event.status==='approved' ) { %>
+                                <div class="intel-badge reminder-scheduled">
+                                    <i class="fas fa-clock"></i>
+                                    Reminder Scheduled
+                                </div>
+                                <% } else { %>
+                                    <div class="intel-badge reminder-na">
+                                        <i class="fas fa-minus-circle"></i>
+                                        No Reminder (Event not approved)
+                                    </div>
+                                    <% } %>
+                    </div>
+
+                    <% } %>
+
+                        <!-- ============ Intelligence Styles ============ -->
+                        <style>
+                            .intel-card {
+                                background: #fff;
+                                border-radius: 12px;
+                                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+                                padding: 1.25rem;
+                                margin-bottom: 1rem;
+                            }
+
+                            .intel-title {
+                                margin: 0 0 0.75rem 0;
+                                font-size: 0.95rem;
+                                font-weight: 600;
+                                color: #4a5568;
+                                display: flex;
+                                align-items: center;
+                                gap: 0.5rem;
+                            }
+
+                            /* Lifecycle */
+                            .lifecycle-timeline {
+                                display: flex;
+                                align-items: center;
+                                gap: 0;
+                                margin-bottom: 0.5rem;
+                            }
+
+                            .lifecycle-step {
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                                gap: 0.35rem;
+                                flex-shrink: 0;
+                            }
+
+                            .lifecycle-dot {
+                                width: 36px;
+                                height: 36px;
+                                border-radius: 50%;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                font-size: 0.85rem;
+                                border: 2px solid #cbd5e0;
+                                color: #a0aec0;
+                                background: #f7fafc;
+                                transition: all 0.3s;
+                            }
+
+                            .lifecycle-step.done .lifecycle-dot {
+                                border-color: #38a169;
+                                background: #c6f6d5;
+                                color: #22543d;
+                            }
+
+                            .lifecycle-step.active .lifecycle-dot {
+                                border-color: #667eea;
+                                background: #667eea;
+                                color: #fff;
+                                box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+                            }
+
+                            .lifecycle-step.rejected .lifecycle-dot {
+                                border-color: #e53e3e;
+                                background: #fed7d7;
+                                color: #c53030;
+                                box-shadow: 0 0 0 4px rgba(229, 62, 62, 0.15);
+                            }
+
+                            .lifecycle-label {
+                                font-size: 0.75rem;
+                                color: #718096;
+                                font-weight: 500;
+                            }
+
+                            .lifecycle-step.active .lifecycle-label {
+                                color: #667eea;
+                                font-weight: 700;
+                            }
+
+                            .lifecycle-step.done .lifecycle-label {
+                                color: #38a169;
+                            }
+
+                            .lifecycle-step.rejected .lifecycle-label {
+                                color: #e53e3e;
+                                font-weight: 700;
+                            }
+
+                            .lifecycle-connector {
+                                flex: 1;
+                                height: 3px;
+                                background: #e2e8f0;
+                                min-width: 30px;
+                                margin: 0 4px;
+                                margin-bottom: 22px;
+                            }
+
+                            .lifecycle-connector.done {
+                                background: #38a169;
+                            }
+
+                            /* Capacity */
+                            .capacity-info {
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                                margin-bottom: 0.5rem;
+                            }
+
+                            .capacity-count {
+                                font-weight: 700;
+                                font-size: 1.1rem;
+                                color: #2d3748;
+                            }
+
+                            .capacity-badge {
+                                padding: 0.2rem 0.65rem;
+                                border-radius: 20px;
+                                font-size: 0.75rem;
+                                font-weight: 600;
+                                display: inline-flex;
+                                align-items: center;
+                                gap: 0.3rem;
+                            }
+
+                            .capacity-badge.full {
+                                background: #fed7d7;
+                                color: #c53030;
+                            }
+
+                            .capacity-badge.warning {
+                                background: #fef5e7;
+                                color: #c05621;
+                            }
+
+                            .capacity-badge.open {
+                                background: #c6f6d5;
+                                color: #22543d;
+                            }
+
+                            .capacity-bar-wrap {
+                                width: 100%;
+                                height: 10px;
+                                background: #e2e8f0;
+                                border-radius: 5px;
+                                overflow: hidden;
+                                margin-bottom: 0.25rem;
+                            }
+
+                            .capacity-bar {
+                                height: 100%;
+                                border-radius: 5px;
+                                transition: width 0.6s ease;
+                            }
+
+                            .capacity-pct {
+                                font-size: 0.75rem;
+                                color: #a0aec0;
+                            }
+
+                            /* Badges */
+                            .intel-badge {
+                                display: inline-flex;
+                                align-items: center;
+                                gap: 0.4rem;
+                                padding: 0.4rem 0.85rem;
+                                border-radius: 8px;
+                                font-size: 0.85rem;
+                                font-weight: 500;
+                            }
+
+                            .intel-badge.auto-complete {
+                                background: #ebf8ff;
+                                color: #2b6cb0;
+                            }
+
+                            .intel-badge.reminder-sent {
+                                background: #c6f6d5;
+                                color: #22543d;
+                            }
+
+                            .intel-badge.reminder-scheduled {
+                                background: #fef5e7;
+                                color: #c05621;
+                            }
+
+                            .intel-badge.reminder-na {
+                                background: #f7fafc;
+                                color: #a0aec0;
+                            }
+
+                            /* Compact capacity bar for cards (used by discover/tickets) */
+                            .capacity-mini-wrap {
+                                width: 100%;
+                                height: 6px;
+                                background: #e2e8f0;
+                                border-radius: 3px;
+                                overflow: hidden;
+                                margin-top: 0.4rem;
+                            }
+
+                            .capacity-mini-bar {
+                                height: 100%;
+                                border-radius: 3px;
+                                transition: width 0.5s ease;
+                            }
+
+                            .capacity-mini-info {
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                                font-size: 0.75rem;
+                                color: #718096;
+                                margin-top: 0.2rem;
+                            }
+                        </style>

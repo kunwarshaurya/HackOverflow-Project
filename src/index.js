@@ -13,8 +13,13 @@ const morgan = require('morgan');
 
 const connectDB = require('./config/db');
 const { isAuthenticated } = require('./middlewares/authMiddleware');
-const autoCompleteEvents = require('./utils/autoCompleteEvents');
+const { startScheduledJobs } = require('./jobs/scheduledJobs');
 const app = express();
+
+// ================= SESSION SECRET VALIDATION =================
+if (!process.env.SESSION_SECRET) {
+  throw new Error('SESSION_SECRET environment variable is required. Set it in your .env file.');
+}
 
 // ================= DATABASE =================
 connectDB();
@@ -30,7 +35,7 @@ app.use(cookieParser());
 
 // ================= SESSION CONFIG =================
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'super_secret_key',
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
@@ -54,25 +59,32 @@ app.use((req, res, next) => {
   next();
 });
 
-//===============Auto Complete================================
-app.use(async (req, res, next) => {
-  await autoCompleteEvents();
-  next();
-});
-
-//pendingCount
+// ================= GLOBAL COUNTS (pendingCount + unreadNotifications) =================
 const Event = require('./models/Event');
+const Notification = require('./models/Notification');
 
 app.use(async (req, res, next) => {
   try {
-    if (req.session.user && req.session.user.role === 'admin') {
-      const pendingCount = await Event.countDocuments({ status: 'pending' });
-      res.locals.pendingCount = pendingCount;
+    if (req.session.user) {
+      // Unread notification count for all authenticated users
+      res.locals.unreadNotificationCount = await Notification.countDocuments({
+        recipient: req.session.user._id,
+        isRead: false
+      });
+
+      // Pending event count for admins only
+      if (req.session.user.role === 'admin') {
+        res.locals.pendingCount = await Event.countDocuments({ status: 'pending' });
+      } else {
+        res.locals.pendingCount = 0;
+      }
     } else {
       res.locals.pendingCount = 0;
+      res.locals.unreadNotificationCount = 0;
     }
   } catch (err) {
     res.locals.pendingCount = 0;
+    res.locals.unreadNotificationCount = 0;
   }
   next();
 });
@@ -84,6 +96,10 @@ app.use('/chat', require('./routes/chatRoutes'));
 app.use('/notifications', require('./routes/notificationRoutes'));
 app.use('/student', require('./routes/studentRoutes'));
 app.use('/admin', require('./routes/adminRoutes'));
+app.use('/analytics', require('./routes/analyticsRoutes'));
+app.use('/activity', require('./routes/activityRoutes'));
+app.use('/resources', require('./routes/resourceRoutes'));
+app.use('/admin/equipment', require('./routes/equipmentRoutes'));
 
 // ================= HOME ROUTE =================
 app.get('/', (req, res) => {
@@ -104,74 +120,14 @@ app.get('/dashboard', (req, res) => {
   return res.redirect('/student/dashboard');
 });
 
-// ================= DASHBOARD ROUTE (RBAC) =================
-// app.get('/dashboard', async (req, res) => {
-//   if (!req.session.user) {
-//     return res.redirect('/auth/login');
-//   }
-
-//   const role = req.session.user.role;
-
-//   // Safe default values
-//   const events = [];
-//   const clubs = [];
-//   const stats = {
-//     totalEvents: 0,
-//     totalClubs: 0,
-//     totalUsers: 0,
-//     pendingApprovals: 0
-//   };
-
-//   if (role === 'admin') {
-//     return res.render('admin/dashboard', {
-//       title: 'Admin Dashboard',
-//       stats,
-//       events,
-//       clubs
-//     });
-//   }
-
-//   if (role === 'club_lead') {
-//     return res.render('club/dashboard', {
-//       title: 'Club Lead Dashboard',
-//       events,
-//       clubs
-//     });
-//   }
-
-//   return res.render('student/dashboard', {
-//     title: 'Student Dashboard',
-//     events,
-//     clubs
-//   });
-// });
-
-// ================= 404 HANDLER =================
-app.use((req, res) => {
-  res.status(404).render('error', {
-    title: '404 - Not Found',
-    error: 'The page you are looking for does not exist.',
-    statusCode: 404
-  });
-});
-
-// ================= ERROR HANDLER =================
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-
-  const status = err.status || 500;
-
-  res.status(status).render('error', {
-    title: `${status} - Error`,
-    error: process.env.NODE_ENV === 'development'
-      ? err.message
-      : 'Something went wrong!',
-    statusCode: status
-  });
-});
+// ================= ERROR HANDLING =================
+const { notFoundHandler, globalErrorHandler } = require('./middlewares/errorHandler');
+app.use(notFoundHandler);
+app.use(globalErrorHandler);
 
 // ================= SERVER START =================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  process.stdout.write(`Server running on http://localhost:${PORT}\n`);
+  startScheduledJobs();
 });

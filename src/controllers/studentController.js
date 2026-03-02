@@ -2,6 +2,7 @@
 const eventService = require('../services/eventService');
 
 const clubService = require('../services/clubService');
+const activityService = require('../services/activityService');
 
 exports.getDashboard = async (req, res) => {
   try {
@@ -9,12 +10,14 @@ exports.getDashboard = async (req, res) => {
 
     const events = await eventService.getUpcomingApprovedEvents();
     const clubs = await clubService.getAllActiveClubs();
+    const activities = await activityService.getActivityFeed({ _id: userId, role: 'student' }, 10);
 
     res.render('student/dashboard', {
       title: 'Student Dashboard',
-      user: req.session.user,   // REQUIRED
-      events: events || [],     // REQUIRED
-      clubs: clubs || [],       // REQUIRED
+      user: req.session.user,
+      events: events || [],
+      clubs: clubs || [],
+      activities: activities || [],
       error: null,
       success: null
     });
@@ -80,13 +83,13 @@ exports.registerForEvent = async (req, res) => {
 
     const result = await eventService.registerStudentForEvent(eventId, userId);
 
- if (result.alreadyRegistered) {
-  return res.redirect('/student/dashboard?message=already_registered');
-}
+    if (result.alreadyRegistered) {
+      return res.redirect('/student/dashboard?message=already_registered');
+    }
 
-if (result.full) {
-  return res.redirect('/student/dashboard?message=event_full');
-}
+    if (result.full) {
+      return res.redirect('/student/dashboard?message=event_full');
+    }
 
     res.redirect('/student/dashboard?message=registered');
 
@@ -122,7 +125,7 @@ exports.getEventDetails = async (req, res) => {
 
     const canApprove = user.role === 'admin';
     const canManage =
-      user.role === 'club' &&
+      user.role === 'club_lead' &&
       event.club &&
       event.club._id.toString() === user._id.toString();
 

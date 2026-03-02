@@ -1,24 +1,53 @@
+// src/controllers/eventController.js
+
 const Event = require('../models/Event');
 const Venue = require('../models/Venue');
-const Notification = require('../models/Notification');
+const EquipmentBooking = require('../models/EquipmentBooking');
+const Equipment = require('../models/Equipment');
 const checkConflict = require('../utils/conflictChecker');
+const checkEquipmentConflict = require('../utils/equipmentConflictChecker');
+const notificationService = require('../services/notificationService');
+
+/**
+ * Convert "HH:MM" string to minutes-from-midnight integer.
+ * "14:30" → 870
+ */
+function timeToMinutes(timeStr) {
+  if (typeof timeStr === 'number') return timeStr;
+  const parts = String(timeStr).split(':');
+  if (parts.length !== 2) return NaN;
+  const hours = parseInt(parts[0], 10);
+  const mins = parseInt(parts[1], 10);
+  if (isNaN(hours) || isNaN(mins)) return NaN;
+  return hours * 60 + mins;
+}
 
 exports.createEvent = async (req, res) => {
   try {
-
     const { name, description, venueId, clubId, date, startTime, endTime, budget, collaboratorIds } = req.body;
+
+    const startMinutes = timeToMinutes(startTime);
+    const endMinutes = timeToMinutes(endTime);
+
+    if (isNaN(startMinutes) || isNaN(endMinutes)) {
+      return res.redirect('/club/create-event');
+    }
+
+    if (endMinutes <= startMinutes) {
+      return res.redirect('/club/create-event');
+    }
 
     const venueDetails = await Venue.findById(venueId);
     if (!venueDetails) {
-      return res.redirect('/club/create-event'); // Flash error realistically
-    }
-
-    const isConflict = await checkConflict(venueId, date, startTime, endTime);
-
-    if (isConflict) {
-      // Typically flash error is set
       return res.redirect('/club/create-event');
     }
+
+    const isConflict = await checkConflict(venueId, date, startMinutes, endMinutes);
+
+    if (isConflict) {
+      return res.redirect('/club/create-event');
+    }
+
     let collaboratorsList = [];
     if (collaboratorIds && Array.isArray(collaboratorIds)) {
       collaboratorsList = collaboratorIds.map(id => ({
@@ -35,15 +64,50 @@ exports.createEvent = async (req, res) => {
       club: clubId,
       collaborators: collaboratorsList,
       date,
-      startTime,
-      endTime,
+      startTime: startMinutes,
+      endTime: endMinutes,
       budget,
       organizer: req.user.id
     });
 
+    // ===== Equipment Booking Requests =====
+    let equipmentIds = req.body['equipmentIds[]'] || req.body.equipmentIds || [];
+    let equipmentQtys = req.body['equipmentQtys[]'] || req.body.equipmentQtys || [];
+
+    // Normalize to arrays
+    if (!Array.isArray(equipmentIds)) equipmentIds = [equipmentIds];
+    if (!Array.isArray(equipmentQtys)) equipmentQtys = [equipmentQtys];
+
+    for (let i = 0; i < equipmentIds.length; i++) {
+      const eqId = equipmentIds[i];
+      const qty = Number(equipmentQtys[i]);
+
+      if (!eqId || isNaN(qty) || qty < 1) continue;
+
+      // Check availability before creating booking
+      const conflictResult = await checkEquipmentConflict(eqId, date, startMinutes, endMinutes, qty);
+
+      if (!conflictResult.conflict) {
+        const booking = await EquipmentBooking.create({
+          equipment: eqId,
+          event: event._id,
+          bookedBy: req.user.id,
+          date,
+          startTime: startMinutes,
+          endTime: endMinutes,
+          quantity: qty,
+          status: 'pending'
+        });
+
+        // Notify admins of new booking request
+        const eqDoc = await Equipment.findById(eqId).select('name');
+        const eqName = eqDoc ? eqDoc.name : 'equipment';
+        await notificationService.notifyAdminsOfBooking(booking, eqName);
+      }
+    }
+
     res.redirect('/dashboard');
   } catch (error) {
-    console.error('Error creating event:', error.message);
     res.redirect('/dashboard');
   }
 };
@@ -51,20 +115,7 @@ exports.createEvent = async (req, res) => {
 
 exports.getEvents = async (req, res) => {
   try {
-
     const currentDate = new Date();
-
-    // 🔥 Auto-complete past approved events
-    await Event.updateMany(
-      {
-        status: 'approved',
-        date: { $lt: currentDate }
-      },
-      {
-        $set: { status: 'completed' }
-      }
-    );
-
     let query = {};
 
     // Role-based filtering
@@ -94,7 +145,6 @@ exports.getEvents = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error fetching events:', error.message);
     res.redirect('/dashboard');
   }
 };
@@ -118,28 +168,22 @@ exports.updateEventStatus = async (req, res) => {
 
     // Only allow status change if event is still pending
     if (event.status !== 'pending') {
-      console.log("Attempted invalid status change");
       return res.redirect('/admin/approvals');
     }
 
     event.status = status;
     await event.save();
 
-    // Send notification
-    await Notification.create({
-      recipient: event.organizer,
-      message: `Your event "${event.name}" has been ${status}.`,
-      type: status === 'approved' ? 'success' : 'error',
-      relatedEvent: event._id
-    });
+    // Send notification via service
+    await notificationService.notifyEventStatusChange(event, status);
 
     res.redirect('/admin/approvals');
 
   } catch (error) {
-    console.error('Error updating event status:', error.message);
     res.redirect('/admin/approvals');
   }
 };
+
 exports.settleEvent = async (req, res) => {
   try {
     if (!req.file) {
@@ -148,7 +192,11 @@ exports.settleEvent = async (req, res) => {
 
     const event = await Event.findById(req.params.id);
     if (!event) {
-      return res.status(404).json({ message: 'Event not found' });
+      return res.status(404).render('error', {
+        title: 'Not Found',
+        error: 'Event not found',
+        statusCode: 404
+      });
     }
 
     event.status = 'completed';
@@ -158,7 +206,6 @@ exports.settleEvent = async (req, res) => {
 
     res.redirect('/dashboard');
   } catch (error) {
-    console.error('Error settling event:', error.message);
     res.redirect('/dashboard');
   }
 };
@@ -168,32 +215,31 @@ exports.registerForEvent = async (req, res) => {
     const event = await Event.findById(req.params.id);
 
     if (!event) {
-      return res.status(404).render('error');
+      return res.status(404).render('error', {
+        title: 'Not Found',
+        error: 'Event not found',
+        statusCode: 404
+      });
     }
 
-    // ❌ Block if not approved
     if (event.status !== 'approved') {
       return res.redirect(`/student/events/${event._id}`);
     }
 
-    // ❌ Block if event full
     if (event.attendees.length >= event.capacity) {
       return res.redirect(`/student/events/${event._id}`);
     }
 
-    // ❌ Block duplicate registration (safe check)
     if (event.attendees.some(att => att.toString() === req.user.id.toString())) {
       return res.redirect(`/student/events/${event._id}`);
     }
 
-    // ✅ Register user
     event.attendees.push(req.user.id);
     await event.save();
 
     res.redirect(`/student/events/${event._id}`);
 
   } catch (error) {
-    console.error('Error registering for event:', error.message);
     res.redirect('/dashboard');
   }
 };

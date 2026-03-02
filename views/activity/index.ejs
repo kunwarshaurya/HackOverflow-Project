@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= title %>
+    </title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/partials.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <%- include('../partials/navbar') %>
+
+        <main class="main-content">
+            <div class="container">
+                <div class="activity-page-header">
+                    <h1><i class="fas fa-stream"></i> Activity Feed</h1>
+                    <p>Recent system activity relevant to your role</p>
+                </div>
+
+                <%- include('../partials/activity-feed', { activities: activities, feedTitle: 'All Activity' ,
+                    showViewAll: false }) %>
+            </div>
+        </main>
+
+        <%- include('../partials/footer') %>
+
+            <div id="toast-container" class="toast-container"></div>
+            <script src="/js/main.js"></script>
+            <script src="/js/notifications.js"></script>
+</body>
+
+</html>
+
+<style>
+    .activity-page-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .activity-page-header h1 {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        color: #2d3748;
+    }
+
+    .activity-page-header p {
+        color: #718096;
+        margin: 0;
+    }
+</style>

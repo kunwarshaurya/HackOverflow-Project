@@ -1,31 +1,40 @@
 const Event = require('../models/Event');
 const Club = require('../models/Club');
 const Venue = require('../models/Venue');
+const activityService = require('../services/activityService');
+const analyticsService = require('../services/analyticsService');
 
 exports.dashboard = async (req, res) => {
   try {
-    const totalEvents = await Event.countDocuments();
-    const activeEvents = await Event.countDocuments({ status: 'approved' });
-    const pendingApprovals = await Event.countDocuments({ status: 'pending' });
-    const totalClubs = await Club.countDocuments();
-    const totalVenues = await Venue.countDocuments();
-
-    const recentEvents = await Event.find()
-      .populate('club', 'name')
-      .populate('venue', 'name')
-      .sort({ createdAt: -1 })
-      .limit(5);
+    const [adminAnalytics, venueAnalytics, totalClubs, totalVenues, recentEvents, activities] = await Promise.all([
+      analyticsService.getAdminAnalytics(),
+      analyticsService.getVenueAnalytics(),
+      Club.countDocuments(),
+      Venue.countDocuments(),
+      Event.find()
+        .populate('club', 'name')
+        .populate('venue', 'name')
+        .sort({ createdAt: -1 })
+        .limit(5),
+      activityService.getActivityFeed({ _id: null, role: 'admin' }, 10)
+    ]);
 
     res.render('admin/dashboard', {
       title: 'Admin Dashboard',
       stats: {
-        totalEvents,
-        activeEvents,
-        pendingApprovals,
+        totalEvents: adminAnalytics.totalEvents,
+        activeEvents: adminAnalytics.approvedCount,
+        pendingApprovals: adminAnalytics.totalEvents - adminAnalytics.approvedCount - adminAnalytics.rejectedCount - adminAnalytics.completedCount,
         totalClubs,
-        totalVenues
+        totalVenues,
+        rejectedEvents: adminAnalytics.rejectedCount,
+        completedEvents: adminAnalytics.completedCount,
+        approvalRate: adminAnalytics.approvalRatio
       },
-      events: recentEvents,   // 👈 ADD THIS
+      analytics: adminAnalytics,
+      venueAnalytics,
+      events: recentEvents,
+      activities,
       error: null,
       success: null
     });

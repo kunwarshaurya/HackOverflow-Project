@@ -1,5 +1,7 @@
 const Club = require('../models/Club');
 const Event = require('../models/Event');
+const activityService = require('../services/activityService');
+const analyticsService = require('../services/analyticsService');
 
 
 // =========================
@@ -51,41 +53,35 @@ exports.getClubs = async (req, res) => {
 // =========================
 exports.dashboard = async (req, res) => {
   try {
-    const clubEvents = await Event.find({ organizer: req.user.id })
-      .populate('venue', 'name')
-      .sort({ createdAt: -1 });
+    const [clubEvents, clubs, activities, clubAnalytics] = await Promise.all([
+      Event.find({ organizer: req.user.id })
+        .populate('venue', 'name')
+        .sort({ createdAt: -1 }),
+      Club.find({ admin: req.user.id }),
+      activityService.getActivityFeed({ _id: req.user.id, role: 'club_lead' }, 10),
+      analyticsService.getClubAnalytics(req.user.id)
+    ]);
 
     const totalEvents = clubEvents.length;
-
     const activeEvents = clubEvents.filter(e => e.status === 'approved').length;
-
     const pendingEvents = clubEvents.filter(e => e.status === 'pending').length;
-
     const totalRegistrations = clubEvents.reduce((sum, event) => {
       return sum + (event.attendees ? event.attendees.length : 0);
     }, 0);
-
     const recentEvents = clubEvents.slice(0, 5);
-
-    const clubs = await Club.find({ admin: req.user.id });
 
     res.render('club/dashboard', {
       title: 'Club Dashboard',
-
-      // stats
       totalEvents,
       activeEvents,
       pendingEvents,
       totalRegistrations,
-
-      // data
       recentEvents,
       clubs,
-
-      // VERY IMPORTANT
+      activities,
+      clubAnalytics,
       error: null,
       success: null,
-
       user: req.user
     });
 
