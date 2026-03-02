@@ -1,0 +1,216 @@
+<%# Reusable Activity Feed Component Expects: activities (array of { type, icon, color, title, description, createdAt })
+    Optional: feedTitle (string), showViewAll (boolean) %>
+
+    <% const feedItems=(typeof activities !=='undefined' && Array.isArray(activities)) ? activities : []; %>
+        <% const sectionTitle=(typeof feedTitle !=='undefined' ) ? feedTitle : 'Recent Activity' ; %>
+            <% const viewAll=(typeof showViewAll !=='undefined' ) ? showViewAll : true; %>
+
+                <div class="activity-feed-section">
+                    <div class="activity-feed-header">
+                        <h3 class="activity-feed-title"><i class="fas fa-stream"></i>
+                            <%= sectionTitle %>
+                        </h3>
+                        <% if (viewAll) { %>
+                            <a href="/activity" class="activity-view-all">View All <i
+                                    class="fas fa-arrow-right"></i></a>
+                            <% } %>
+                    </div>
+
+                    <% if (feedItems.length> 0) { %>
+                        <div class="activity-feed-list">
+                            <% feedItems.forEach(function(item) { %>
+                                <% const now=new Date(); const created=new Date(item.createdAt); const diffMs=now -
+                                    created; const diffMin=Math.floor(diffMs / 60000); const diffHr=Math.floor(diffMin /
+                                    60); const diffDay=Math.floor(diffHr / 24); let timeAgo='' ; if (diffMin < 1)
+                                    timeAgo='Just now' ; else if (diffMin < 60) timeAgo=diffMin + 'm ago' ; else if
+                                    (diffHr < 24) timeAgo=diffHr + 'h ago' ; else if (diffDay < 7) timeAgo=diffDay
+                                    + 'd ago' ; else timeAgo=created.toLocaleDateString('en-US', { month: 'short' ,
+                                    day: 'numeric' }); %>
+                                    <% let itemHref='' ; if (item.relatedEntityId) { const t=(item.type || ''
+                                        ).toUpperCase(); if (t.startsWith('EVENT') || t==='REMINDER_SENT' ) {
+                                        itemHref='/student/events/' + item.relatedEntityId; } else if
+                                        (t.startsWith('BOOKING')) { itemHref='/admin/approvals' ; } else {
+                                        itemHref='/notifications' ; } } %>
+                                        <% if (itemHref) { %>
+                                            <a href="<%= itemHref %>" class="activity-item activity-item-link">
+                                                <% } else { %>
+                                                    <div class="activity-item">
+                                                        <% } %>
+                                                            <div class="activity-icon"
+                                                                style="background: <%= item.color %>">
+                                                                <i class="fas <%= item.icon %>"></i>
+                                                            </div>
+                                                            <div class="activity-body">
+                                                                <div class="activity-item-title">
+                                                                    <%= item.title %>
+                                                                </div>
+                                                                <div class="activity-desc">
+                                                                    <%= item.description %>
+                                                                </div>
+                                                            </div>
+                                                            <div class="activity-time">
+                                                                <%= timeAgo %>
+                                                                    <% if (itemHref) { %>
+                                                                        <i class="fas fa-chevron-right"
+                                                                            style="margin-left:4px;font-size:0.65rem;opacity:0.5"></i>
+                                                                        <% } %>
+                                                            </div>
+                                                            <% if (itemHref) { %>
+                                            </a>
+                                            <% } else { %>
+                        </div>
+                        <% } %>
+                            <% }); %>
+                </div>
+                <% } else { %>
+                    <div class="activity-empty">
+                        <i class="fas fa-inbox"></i>
+                        <p>No recent activity</p>
+                    </div>
+                    <% } %>
+                        </div>
+
+                        <style>
+                            .activity-feed-section {
+                                margin-bottom: 1.5rem;
+                            }
+
+                            .activity-feed-header {
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                                margin-bottom: 1rem;
+                            }
+
+                            .activity-feed-title {
+                                margin: 0;
+                                font-size: 1.25rem;
+                                font-weight: 600;
+                                color: #2d3748;
+                                display: flex;
+                                align-items: center;
+                                gap: 0.5rem;
+                            }
+
+                            .activity-view-all {
+                                font-size: 0.85rem;
+                                color: #667eea;
+                                text-decoration: none;
+                                font-weight: 500;
+                                display: flex;
+                                align-items: center;
+                                gap: 0.25rem;
+                            }
+
+                            .activity-view-all:hover {
+                                text-decoration: underline;
+                            }
+
+                            .activity-feed-list {
+                                background: #fff;
+                                border-radius: 12px;
+                                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+                                border: 1px solid #e2e8f0;
+                                overflow: hidden;
+                            }
+
+                            .activity-item {
+                                display: flex;
+                                align-items: center;
+                                gap: 0.75rem;
+                                padding: 0.75rem 1rem;
+                                border-bottom: 1px solid #f7fafc;
+                                transition: background 0.15s;
+                            }
+
+                            .activity-item:last-child {
+                                border-bottom: none;
+                            }
+
+                            .activity-item:hover {
+                                background: #f7fafc;
+                            }
+
+                            .activity-icon {
+                                width: 36px;
+                                height: 36px;
+                                border-radius: 8px;
+                                flex-shrink: 0;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                color: #fff;
+                                font-size: 0.85rem;
+                            }
+
+                            .activity-body {
+                                flex: 1;
+                                min-width: 0;
+                            }
+
+                            .activity-item-title {
+                                font-size: 0.85rem;
+                                font-weight: 600;
+                                color: #2d3748;
+                            }
+
+                            .activity-desc {
+                                font-size: 0.8rem;
+                                color: #718096;
+                                white-space: nowrap;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                            }
+
+                            .activity-time {
+                                font-size: 0.75rem;
+                                color: #a0aec0;
+                                white-space: nowrap;
+                                flex-shrink: 0;
+                            }
+
+                            .activity-empty {
+                                text-align: center;
+                                padding: 2rem;
+                                color: #a0aec0;
+                            }
+
+                            .activity-empty i {
+                                font-size: 2rem;
+                                margin-bottom: 0.5rem;
+                                display: block;
+                            }
+
+                            .activity-empty p {
+                                margin: 0;
+                                font-size: 0.9rem;
+                            }
+
+                            @media (max-width: 768px) {
+                                .activity-desc {
+                                    max-width: 150px;
+                                }
+                            }
+
+                            a.activity-item-link {
+                                text-decoration: none;
+                                color: inherit;
+                                display: flex;
+                                align-items: center;
+                                gap: 0.75rem;
+                                padding: 0.75rem 1rem;
+                                border-bottom: 1px solid #f7fafc;
+                                transition: background 0.15s, border-left 0.15s;
+                                cursor: pointer;
+                                border-left: 3px solid transparent;
+                            }
+
+                            a.activity-item-link:hover {
+                                background: #edf2f7;
+                                border-left-color: #667eea;
+                            }
+
+                            a.activity-item-link:last-child {
+                                border-bottom: none;
+                            }
+                        </style>

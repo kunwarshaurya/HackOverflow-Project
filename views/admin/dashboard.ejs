@@ -1,211 +1,581 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %></title>
+    <title>
+        <%= title %>
+    </title>
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/partials.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 </head>
+
 <body>
     <%- include('../partials/navbar') %>
-    
-    <main class="main-content">
-        <div class="container">
-            <div class="page-header">
-                <h1><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h1>
-                <p>Overview of platform activity and management tools</p>
-            </div>
-            
-            <!-- Stats Cards -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-header">
-                        <h3 class="stat-title">Total Events</h3>
-                        <div class="stat-icon primary">
-                            <i class="fas fa-calendar"></i>
-                        </div>
-                    </div>
-                    <p class="stat-value"><%= stats.totalEvents %></p>
+
+        <main class="main-content">
+            <div class="container">
+                <div class="page-header">
+                    <h1><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h1>
+                    <p>Overview of platform activity and management tools</p>
                 </div>
-                
-                <div class="stat-card">
-                    <div class="stat-header">
-                        <h3 class="stat-title">Active Events</h3>
-                        <div class="stat-icon success">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-                    </div>
-                    <p class="stat-value"><%= stats.activeEvents %></p>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-header">
-                        <h3 class="stat-title">Pending Approvals</h3>
-                        <div class="stat-icon warning">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                    </div>
-                    <p class="stat-value"><%= stats.pendingEvents %></p>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-header">
-                        <h3 class="stat-title">Total Clubs</h3>
-                        <div class="stat-icon primary">
-                            <i class="fas fa-users"></i>
-                        </div>
-                    </div>
-                    <p class="stat-value"><%= stats.totalClubs %></p>
-                </div>
+
+                <!-- Stats Cards -->
+                <div class="stats-grid">
                     <div class="stat-card">
-                    <div class="stat-header">
-                        <h3 class="stat-title">Total Venues </h3>
-                        <div class="stat-icon primary">
-                            <i class="fas fa-users"></i>
+                        <div class="stat-header">
+                            <h3 class="stat-title">Total Events</h3>
+                            <div class="stat-icon primary">
+                                <i class="fas fa-calendar"></i>
+                            </div>
+                        </div>
+                        <p class="stat-value">
+                            <%= stats.totalEvents %>
+                        </p>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <h3 class="stat-title">Active Events</h3>
+                            <div class="stat-icon success">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                        </div>
+                        <p class="stat-value">
+                            <%= stats.activeEvents %>
+                        </p>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <h3 class="stat-title">Pending Approvals</h3>
+                            <div class="stat-icon warning">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                        </div>
+                        <p class="stat-value">
+                            <%= stats.pendingApprovals %>
+                        </p>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <h3 class="stat-title">Total Clubs</h3>
+                            <div class="stat-icon primary">
+                                <i class="fas fa-users"></i>
+                            </div>
+                        </div>
+                        <p class="stat-value">
+                            <%= stats.totalClubs %>
+                        </p>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <h3 class="stat-title">Total Venues </h3>
+                            <div class="stat-icon primary">
+                                <i class="fas fa-building"></i>
+                            </div>
+                        </div>
+                        <p class="stat-value">
+                            <%= stats.totalVenues %>
+                        </p>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <h3 class="stat-title">Rejected</h3>
+                            <div class="stat-icon" style="background:linear-gradient(135deg,#e53e3e,#c53030)">
+                                <i class="fas fa-times-circle"></i>
+                            </div>
+                        </div>
+                        <p class="stat-value">
+                            <%= stats.rejectedEvents || 0 %>
+                        </p>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <h3 class="stat-title">Completed</h3>
+                            <div class="stat-icon" style="background:linear-gradient(135deg,#38a169,#276749)">
+                                <i class="fas fa-flag-checkered"></i>
+                            </div>
+                        </div>
+                        <p class="stat-value">
+                            <%= stats.completedEvents || 0 %>
+                        </p>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <h3 class="stat-title">Approval Rate</h3>
+                            <div class="stat-icon" style="background:linear-gradient(135deg,#667eea,#764ba2)">
+                                <i class="fas fa-percentage"></i>
+                            </div>
+                        </div>
+                        <p class="stat-value">
+                            <%= stats.approvalRate || 0 %>%
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Executive Analytics Charts -->
+                <section class="analytics-section">
+                    <div class="analytics-section-header">
+                        <h2><i class="fas fa-chart-bar"></i> Executive Analytics</h2>
+                    </div>
+                    <div class="analytics-charts-row">
+                        <div class="analytics-chart-card">
+                            <h4 class="analytics-chart-title">Approval Ratio</h4>
+                            <div class="analytics-chart-wrap"><canvas id="approvalDoughnut"></canvas></div>
+                        </div>
+                        <div class="analytics-chart-card">
+                            <h4 class="analytics-chart-title">Top Events by Registrations</h4>
+                            <div class="analytics-chart-wrap"><canvas id="topEventsBar"></canvas></div>
+                        </div>
+                        <div class="analytics-chart-card">
+                            <h4 class="analytics-chart-title">Venue Usage</h4>
+                            <div class="analytics-chart-wrap"><canvas id="venueUsageBar"></canvas></div>
                         </div>
                     </div>
-                    <p class="stat-value"><%= stats.totalVenues %></p>
-                </div>
-            </div>
-            
-            <!-- Quick Actions -->
-            <div class="card">
-                <div class="card-header">
-                    <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
-                </div>
-                <div class="card-body">
-                    <div class="action-buttons">
-                        <a href="/admin/approvals" class="btn btn-primary">
-                            <i class="fas fa-check-circle"></i>
-                            Review Pending Events (<%= stats.pendingEvents %>)
-                        </a>
-                        <a href="/admin/venues" class="btn btn-secondary">
-                            <i class="fas fa-building"></i>
-                            Manage Venues
-                        </a>
-                        <a href="/admin/clubs" class="btn btn-secondary">
-                            <i class="fas fa-users"></i>
-                            Manage Clubs
-                        </a>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Recent Events -->
-            <div class="card">
-                <div class="card-header">
-                    <h2><i class="fas fa-history"></i> Recent Events</h2>
-                </div>
-                <div class="card-body">
-                    <% if (events && events.length > 0) { %>
-                        <div class="data-table">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Event Name</th>
-                                        <th>Status</th>
-                                        <th>Date</th>
-                                        <th>Budget</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <% events.slice(0, 10).forEach(event => { %>
-                                        <tr>
-                                            <td>
-                                                <strong><%= event.name %></strong>
-                                                <br>
-                                                <small class="text-muted"><%= event.description.substring(0, 50) %>...</small>
-                                            </td>
-                                            <td>
-                                                <span class="badge badge-<%= event.status === 'approved' ? 'success' : event.status === 'pending' ? 'warning' : 'error' %>">
-                                                    <%= event.status.toUpperCase() %>
-                                                </span>
-                                            </td>
-                                            <td><%= new Date(event.date).toLocaleDateString() %></td>
-                                            <td>₹<%= event.budget ? event.budget.toLocaleString() : '0' %></td>
-                                            <td>
-                                                <a href="/events/<%= event._id %>" class="btn btn-small btn-secondary">
-                                                    <i class="fas fa-eye"></i> View
-                                                </a>
-                                                <% if (event.status === 'pending') { %>
-                                                    <a href="/admin/approvals" class="btn btn-small btn-primary">
-                                                        <i class="fas fa-check"></i> Review
-                                                    </a>
+                </section>
+
+                <!-- Analytics Intelligence -->
+                <div class="admin-charts-grid" style="margin-bottom:1.5rem">
+                    <!-- Top 3 Events by Registration -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-trophy"></i> Top Events by Registration</h2>
+                        </div>
+                        <div class="card-body">
+                            <% const topEvents=(typeof analytics !=='undefined' && analytics.topEvents) ?
+                                analytics.topEvents : []; %>
+                                <% if (topEvents.length> 0) { %>
+                                    <% topEvents.forEach(function(ev, i) { %>
+                                        <div
+                                            style="display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0;border-bottom:1px solid #f0f0f0">
+                                            <div
+                                                style="width:28px;height:28px;border-radius:50%;background:<%= i === 0 ? '#f6e05e' : i === 1 ? '#a0aec0' : '#ed8936' %>;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.75rem;color:#2d3748;flex-shrink:0">
+                                                <%= i + 1 %>
+                                            </div>
+                                            <div style="flex:1;min-width:0">
+                                                <div
+                                                    style="font-weight:600;font-size:0.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                                                    <%= ev.name %>
+                                                </div>
+                                                <div style="font-size:0.75rem;color:#718096">
+                                                    <%= ev.venueName || 'N/A' %> · <%= ev.regCount %> registered
+                                                </div>
+                                            </div>
+                                            <div style="width:80px;flex-shrink:0">
+                                                <div
+                                                    style="height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden">
+                                                    <div
+                                                        style="height:100%;width:<%= ev.capacity > 0 ? Math.min(100, Math.round(ev.regCount / ev.capacity * 100)) : 0 %>%;background:linear-gradient(90deg,#667eea,#764ba2);border-radius:3px">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <% }); %>
+                                            <div
+                                                style="margin-top:0.5rem;font-size:0.75rem;color:#a0aec0;text-align:center">
+                                                Avg. registrations: <strong>
+                                                    <%= (typeof analytics !=='undefined' ? analytics.avgRegistrations :
+                                                        0) %>
+                                                </strong> per event
+                                            </div>
+                                            <% } else { %>
+                                                <p style="text-align:center;color:#a0aec0;padding:1rem">No events yet
+                                                </p>
                                                 <% } %>
-                                            </td>
+                        </div>
+                    </div>
+
+                    <!-- Venue Usage -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-map-marker-alt"></i> Venue Usage</h2>
+                        </div>
+                        <div class="card-body">
+                            <% const vStats=(typeof venueAnalytics !=='undefined' && venueAnalytics.venues) ?
+                                venueAnalytics.venues : []; %>
+                                <% if (vStats.length> 0) { %>
+                                    <% vStats.slice(0, 5).forEach(function(v) { %>
+                                        <div
+                                            style="display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0;border-bottom:1px solid #f7fafc">
+                                            <div style="flex:1;font-size:0.85rem;font-weight:500">
+                                                <%= v.name %>
+                                            </div>
+                                            <div style="font-size:0.8rem;color:#718096">
+                                                <%= v.eventCount %> events
+                                            </div>
+                                            <% if (typeof venueAnalytics !=='undefined' && venueAnalytics.mostUsed &&
+                                                v.venueId &&
+                                                v.venueId.toString()===venueAnalytics.mostUsed.venueId.toString()) { %>
+                                                <span
+                                                    style="font-size:0.65rem;background:#c6f6d5;color:#276749;padding:2px 6px;border-radius:4px">Most
+                                                    Used</span>
+                                                <% } else if (typeof venueAnalytics !=='undefined' &&
+                                                    venueAnalytics.leastUsed && v.venueId &&
+                                                    v.venueId.toString()===venueAnalytics.leastUsed.venueId.toString()
+                                                    && vStats.length> 1) { %>
+                                                    <span
+                                                        style="font-size:0.65rem;background:#fed7d7;color:#c53030;padding:2px 6px;border-radius:4px">Least
+                                                        Used</span>
+                                                    <% } %>
+                                        </div>
+                                        <% }); %>
+                                            <% } else { %>
+                                                <p style="text-align:center;color:#a0aec0;padding:1rem">No venue data
+                                                </p>
+                                                <% } %>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Feed -->
+                <div class="card" style="margin-bottom:1.5rem">
+                    <div class="card-body">
+                        <%- include('../partials/activity-feed', { activities: activities || [],
+                            feedTitle: 'System Activity' , showViewAll: true }) %>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="action-buttons">
+                            <a href="/admin/approvals" class="btn btn-primary">
+                                <i class="fas fa-check-circle"></i>
+                                Review Pending Events (<%= stats.pendingApprovals %>)
+                            </a>
+                            <a href="/admin/venues" class="btn btn-secondary">
+                                <i class="fas fa-building"></i>
+                                Manage Venues
+                            </a>
+                            <a href="/admin/clubs" class="btn btn-secondary">
+                                <i class="fas fa-users"></i>
+                                Manage Clubs
+                            </a>
+                            <a href="/admin/equipment" class="btn btn-secondary">
+                                <i class="fas fa-tools"></i>
+                                Equipment
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Events -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-history"></i> Recent Events</h2>
+                    </div>
+                    <div class="card-body">
+                        <% if (events && events.length> 0) { %>
+                            <div class="data-table">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Event Name</th>
+                                            <th>Status</th>
+                                            <th>Date</th>
+                                            <th>Budget</th>
+                                            <th>Actions</th>
                                         </tr>
-                                    <% }); %>
-                                </tbody>
-                            </table>
-                        </div>
-                    <% } else { %>
-                        <div class="empty-state">
-                            <i class="fas fa-calendar-times"></i>
-                            <h3>No events yet</h3>
-                            <p>Events will appear here once clubs start creating them.</p>
-                        </div>
-                    <% } %>
+                                    </thead>
+                                    <tbody>
+                                        <% events.slice(0, 10).forEach(event=> { %>
+                                            <tr>
+                                                <td>
+                                                    <strong>
+                                                        <%= event.name %>
+                                                    </strong>
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        <%= event.description.substring(0, 50) %>...
+                                                    </small>
+                                                </td>
+                                                <td>
+                                                    <span
+                                                        class="badge badge-<%= event.status === 'approved' ? 'success' : event.status === 'pending' ? 'warning' : 'error' %>">
+                                                        <%= event.status.toUpperCase() %>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <%= new Date(event.date).toLocaleDateString() %>
+                                                </td>
+                                                <td>₹<%= event.budget ? event.budget.toLocaleString() : '0' %>
+                                                </td>
+                                                <td>
+                                                    <a href="/events/<%= event._id %>"
+                                                        class="btn btn-small btn-secondary">
+                                                        <i class="fas fa-eye"></i> View
+                                                    </a>
+                                                    <% if (event.status==='pending' ) { %>
+                                                        <a href="/admin/approvals" class="btn btn-small btn-primary">
+                                                            <i class="fas fa-check"></i> Review
+                                                        </a>
+                                                        <% } %>
+                                                </td>
+                                            </tr>
+                                            <% }); %>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <% } else { %>
+                                <div class="empty-state">
+                                    <i class="fas fa-calendar-times"></i>
+                                    <h3>No events yet</h3>
+                                    <p>Events will appear here once clubs start creating them.</p>
+                                </div>
+                                <% } %>
+                    </div>
                 </div>
             </div>
-        </div>
-    </main>
-    
-   <%- include('../partials/footer') %>
-    
-    <div id="toast-container" class="toast-container"></div>
-    
-    <script src="/js/main.js"></script>
-    <script src="/js/partials.js"></script>
-    <script src="/js/notifications.js"></script>
-</body>
+        </main>
+
+        <%- include('../partials/footer') %>
+
+            <div id="toast-container" class="toast-container"></div>
+
+            <script src="/js/main.js"></script>
+            <script src="/js/partials.js"></script>
+            <script src="/js/notifications.js"></script>
+
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const analytics = JSON.parse('<%- JSON.stringify(analytics || {}) %>');
+                    const venueData = JSON.parse('<%- JSON.stringify(venueAnalytics || {}) %>');
+
+                    const chartFont = { family: "'Inter', 'Segoe UI', system-ui, sans-serif", size: 12 };
+                    Chart.defaults.font.family = chartFont.family;
+                    Chart.defaults.font.size = chartFont.size;
+                    Chart.defaults.color = '#64748b';
+
+                    // 1) Approval Ratio — Doughnut
+                    const approvedTotal = (analytics.approvedCount || 0) + (analytics.completedCount || 0);
+                    const rejectedTotal = analytics.rejectedCount || 0;
+                    if (document.getElementById('approvalDoughnut')) {
+                        new Chart(document.getElementById('approvalDoughnut'), {
+                            type: 'doughnut',
+                            data: {
+                                labels: ['Approved', 'Rejected'],
+                                datasets: [{
+                                    data: [approvedTotal, rejectedTotal],
+                                    backgroundColor: ['#48bb78', '#e53e3e'],
+                                    borderWidth: 0,
+                                    hoverOffset: 6
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                cutout: '65%',
+                                animation: { duration: 600 },
+                                plugins: {
+                                    legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true, pointStyleWidth: 10 } },
+                                    tooltip: {
+                                        backgroundColor: '#1e293b',
+                                        titleFont: { weight: '600' },
+                                        padding: 10,
+                                        cornerRadius: 8,
+                                        callbacks: {
+                                            label: function (ctx) {
+                                                const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                                const pct = total > 0 ? Math.round(ctx.raw / total * 100) : 0;
+                                                return ctx.label + ': ' + ctx.raw + ' (' + pct + '%)';
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+
+                    // 2) Top 3 Events — Horizontal Bar
+                    const topEvents = analytics.topEvents || [];
+                    if (document.getElementById('topEventsBar') && topEvents.length > 0) {
+                        new Chart(document.getElementById('topEventsBar'), {
+                            type: 'bar',
+                            data: {
+                                labels: topEvents.map(function (e) {
+                                    return e.name.length > 22 ? e.name.substring(0, 22) + '…' : e.name;
+                                }),
+                                datasets: [{
+                                    label: 'Registrations',
+                                    data: topEvents.map(function (e) { return e.regCount; }),
+                                    backgroundColor: '#4299e1',
+                                    borderRadius: 6,
+                                    barThickness: 28
+                                }]
+                            },
+                            options: {
+                                indexAxis: 'y',
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                animation: { duration: 600 },
+                                scales: {
+                                    x: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 }, grid: { color: '#f1f5f9' } },
+                                    y: { grid: { display: false } }
+                                },
+                                plugins: {
+                                    legend: { display: false },
+                                    tooltip: { backgroundColor: '#1e293b', padding: 10, cornerRadius: 8 }
+                                }
+                            }
+                        });
+                    } else if (document.getElementById('topEventsBar')) {
+                        document.getElementById('topEventsBar').parentElement.innerHTML = '<p style="text-align:center;color:#94a3b8;padding:2rem 0">No event data yet</p>';
+                    }
+
+                    // 3) Venue Usage — Vertical Bar
+                    const venues = (venueData.venues || []).slice(0, 8);
+                    if (document.getElementById('venueUsageBar') && venues.length > 0) {
+                        new Chart(document.getElementById('venueUsageBar'), {
+                            type: 'bar',
+                            data: {
+                                labels: venues.map(function (v) {
+                                    return v.name.length > 14 ? v.name.substring(0, 14) + '…' : v.name;
+                                }),
+                                datasets: [{
+                                    label: 'Events',
+                                    data: venues.map(function (v) { return v.eventCount; }),
+                                    backgroundColor: '#805ad5',
+                                    borderRadius: 6,
+                                    barThickness: 32
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                animation: { duration: 600 },
+                                scales: {
+                                    y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 }, grid: { color: '#f1f5f9' } },
+                                    x: { grid: { display: false } }
+                                },
+                                plugins: {
+                                    legend: { display: false },
+                                    tooltip: { backgroundColor: '#1e293b', padding: 10, cornerRadius: 8 }
+                                }
+                            }
+                        });
+                    } else if (document.getElementById('venueUsageBar')) {
+                        document.getElementById('venueUsageBar').parentElement.innerHTML = '<p style="text-align:center;color:#94a3b8;padding:2rem 0">No venue data yet</p>';
+                    }
+                });
+            </script>
+
+
+
+            <style>
+                .page-header {
+                    margin-bottom: var(--spacing-8);
+                    text-align: center;
+                }
+
+                .page-header h1 {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: var(--spacing-3);
+                    margin-bottom: var(--spacing-2);
+                }
+
+                .action-buttons {
+                    display: flex;
+                    gap: var(--spacing-4);
+                    flex-wrap: wrap;
+                }
+
+                .empty-state {
+                    text-align: center;
+                    padding: var(--spacing-12);
+                    color: var(--gray-500);
+                }
+
+                .empty-state i {
+                    font-size: var(--font-size-4xl);
+                    margin-bottom: var(--spacing-4);
+                    color: var(--gray-400);
+                }
+
+                .text-muted {
+                    color: var(--gray-500);
+                }
+
+                /* Analytics Section */
+                .analytics-section {
+                    margin-bottom: 1.5rem;
+                }
+
+                .analytics-section-header {
+                    margin-bottom: 1rem;
+                }
+
+                .analytics-section-header h2 {
+                    font-size: 1.15rem;
+                    font-weight: 600;
+                    color: #1e293b;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                }
+
+                .analytics-charts-row {
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 1.25rem;
+                }
+
+                .analytics-chart-card {
+                    background: #fff;
+                    border-radius: 12px;
+                    padding: 1.25rem;
+                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+                    border: 1px solid #f1f5f9;
+                }
+
+                .analytics-chart-title {
+                    margin: 0 0 1rem 0;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    color: #334155;
+                }
+
+                .analytics-chart-wrap {
+                    position: relative;
+                    height: 220px;
+                }
+
+                /* Intelligence grid */
+                .admin-charts-grid {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 1.5rem;
+                }
+
+                @media (max-width: 992px) {
+                    .analytics-charts-row {
+                        grid-template-columns: 1fr;
+                    }
+                }
+
+                @media (max-width: 768px) {
+                    .action-buttons {
+                        flex-direction: column;
+                    }
+
+                    .action-buttons .btn {
+                        width: 100%;
+                    }
+
+                    .admin-charts-grid {
+                        grid-template-columns: 1fr !important;
+                    }
+                }
+            </style>
+
 </html>
-
-<style>
-.page-header {
-    margin-bottom: var(--spacing-8);
-    text-align: center;
-}
-
-.page-header h1 {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--spacing-3);
-    margin-bottom: var(--spacing-2);
-}
-
-.action-buttons {
-    display: flex;
-    gap: var(--spacing-4);
-    flex-wrap: wrap;
-}
-
-.empty-state {
-    text-align: center;
-    padding: var(--spacing-12);
-    color: var(--gray-500);
-}
-
-.empty-state i {
-    font-size: var(--font-size-4xl);
-    margin-bottom: var(--spacing-4);
-    color: var(--gray-400);
-}
-
-.text-muted {
-    color: var(--gray-500);
-}
-
-@media (max-width: 768px) {
-    .action-buttons {
-        flex-direction: column;
-    }
-    
-    .action-buttons .btn {
-        width: 100%;
-    }
-}
-</style>

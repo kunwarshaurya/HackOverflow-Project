@@ -11,17 +11,17 @@ const UserSchema = new mongoose.Schema({
     default: 'student'
   },
 
-  department: { type: String }, 
-  year: { type: String },       
-  
- 
-  joinedClubs: [{ 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'Club' 
+  department: { type: String },
+  year: { type: String },
+
+
+  joinedClubs: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Club'
   }],
 
- 
-  managedClub: { type: String }, 
+
+  managedClub: { type: String },
 
   createdAt: { type: Date, default: Date.now }
 });
@@ -38,4 +38,4 @@ UserSchema.methods.matchPassword = async function (enteredPassword) {
   return bcrypt.compare(enteredPassword, this.password);
 };
 
-module.exports = mongoose.model('User', UserSchema);
+module.exports = mongoose.models.User || mongoose.model('User', UserSchema);

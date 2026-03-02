@@ -50,14 +50,17 @@ router.get(
   async (req, res) => {
     const Venue = require('../models/Venue');
     const Club = require('../models/Club');
+    const Equipment = require('../models/Equipment');
 
     const venues = await Venue.find({ isAvailable: true });
     const clubs = await Club.find();
+    const equipment = await Equipment.find({ isDeleted: false }).sort({ name: 1 });
 
     res.render('club/create-event', {
       title: 'Create Event',
       venues,
       clubs,
+      equipment,
       user: req.user
     });
   }
